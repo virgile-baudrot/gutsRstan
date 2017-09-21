@@ -161,22 +161,30 @@ transformed parameters{
 
   real<lower=0> param[4]; //
 
-  param[1] = 10^hb_log10; // hb
-  param[2] = 10^kd_log10; // kd
-  param[3] = 10^z_log10; // z
-  param[4] = 10^kk_log10; // kk
-
-}
-model {
-  
   matrix[n_data_Nsurv,2] y_hat;
   vector[n_data_Nsurv] Psurv_hat;
   vector[n_data_Nsurv] Conditional_Psurv_hat;
   
+  param[1] = 10^hb_log10; // hb
+  param[2] = 10^kd_log10; // kd
+  param[3] = 10^z_log10; // z
+  param[4] = 10^kk_log10; // kk
+  
   for(gr in 1:n_group){
   /* initial time must be less than t0 = 0, so we use a very small close small number -1e-8 */
     y_hat[idS_lw[gr]:idS_up[gr],1:2] = solve_TKTD_varSD(y0, -1e-9, tNsurv[idS_lw[gr]:idS_up[gr]], param, tconc[idC_lw[gr]:idC_up[gr]], conc[idC_lw[gr]:idC_up[gr]]);
+    
+    Psurv_hat[idS_lw[gr]:idS_up[gr]] = exp( - y_hat[idS_lw[gr]:idS_up[gr], 2]);
+    
+    for(i in idS_lw[gr]:idS_up[gr]){
+  
+      Conditional_Psurv_hat[i] =  i == idS_lw[gr] ? Psurv_hat[i] : Psurv_hat[i] / Psurv_hat[i-1] ;
+  
+    }
   }
+
+}
+model {
   
   kk_log10 ~ normal( kk_meanlog10, kk_sdlog10 );
   z_log10  ~ normal( z_meanlog10,   z_sdlog10 );
@@ -187,16 +195,20 @@ model {
 
   for(gr in 1:n_group){
     
-    Psurv_hat[idS_lw[gr]:idS_up[gr]] = exp( - y_hat[idS_lw[gr]:idS_up[gr], 2]);
-    
-    for(i in idS_lw[gr]:idS_up[gr]){
-  
-      Conditional_Psurv_hat[i] =  i == idS_lw[gr] ? Psurv_hat[i] : Psurv_hat[i] / Psurv_hat[i-1] ;
-  
-    }
-    
     Nsurv[idS_lw[gr]:idS_up[gr]] ~ binomial( Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
   
   }
+}
+generated quantities {
+  int Nsurv_ppc[n_data_Nsurv];
+
+  for(gr in 1:n_group){
+    
+    /* binomial_rng function cannot be vectorized, so we need to use a loop*/
+     for(i in idS_lw[gr]:idS_up[gr]){
+       Nsurv_ppc[i] = binomial_rng(Nprec[i], Conditional_Psurv_hat[i]);
+     }
+  }
+
 }
 
