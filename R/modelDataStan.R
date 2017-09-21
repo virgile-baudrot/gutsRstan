@@ -1,4 +1,6 @@
-modelData <- function(data, model_type = NULL){
+#' @export
+#' 
+modelDataStan <- function(data, model_type = NULL){
   
   ls_OUT <- list()
   
@@ -31,7 +33,9 @@ modelData <- function(data, model_type = NULL){
     dplyr::arrange(replicate, time) %>%
     dplyr::mutate(id_all = row_number() ) %>%
     dplyr::group_by(replicate) %>%
-    dplyr::mutate(Nprec = ifelse( time == 0, Nsurv, dplyr::lag(Nsurv) ))
+    dplyr::mutate(Nprec = ifelse( time == 0, Nsurv, dplyr::lag(Nsurv) ),
+                  Ninit = max(Nsurv)) %>%  # since it is grouped by replicate
+    dplyr::ungroup()
   
   data_Nsurv_id = data_Nsurv %>%
     dplyr::group_by(replicate) %>%
@@ -43,6 +47,7 @@ modelData <- function(data, model_type = NULL){
   
   ls_OUT$Nsurv <- data_Nsurv$Nsurv
   ls_OUT$Nprec <- data_Nsurv$Nprec
+  ls_OUT$Ninit <- data_Nsurv$Ninit
   
   ls_OUT$tNsurv <- data_Nsurv$time
   ls_OUT$replicate_Nsurv <- data_Nsurv$replicate
