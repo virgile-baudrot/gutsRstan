@@ -8,6 +8,12 @@
 #' 
 survFitODE <- function(data, model_type = NULL, ...){
   
+  dataStan_withReplicate <- modelDataStan(data, model_type)
+  dataStan <- dataStan_withReplicate
+  dataStan$replicate_conc = NULL
+  dataStan$replicate_Nsurv = NULL
+  dataStan$Ninit = NULL
+  
   if(model_type == "SD"){
     model_object <- stanmodels$ode_TKTD_varSD
   } else if(model_type == "IT"){
@@ -16,8 +22,15 @@ survFitODE <- function(data, model_type = NULL, ...){
   
   fit <- rstan::sampling(
     object = model_object,
-    data = data,
+    data = dataStan,
     ...)
   
-  return(fit)
+  ls_out <- list(stanfit = fit,
+                 data = data,
+                 dataStan = dataStan_withReplicate,
+                 model_type = model_type)
+  
+  class(ls_out) <- "survFitODE"
+  
+  return(ls_out)
 }
