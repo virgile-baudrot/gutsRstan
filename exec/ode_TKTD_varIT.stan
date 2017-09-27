@@ -105,7 +105,9 @@ functions {
     return(to_matrix(
       integrate_ode_rk45(TKTD_varIT, y0, t0, ts, theta, 
                          to_array_1d(append_row(to_vector(tconc), to_vector(conc))),
-                         x_i)));
+                         x_i,
+                         // additional control parameters for the solver: real rel_tol, real abs_tol, int max_num_steps
+                         10e-8, 10e-5, 1e3)));
   }
 }
 
@@ -196,11 +198,11 @@ model {
   
   //y0 ~ exponential(10^6); // Initial condition for y0 have to be put close to 0 !!!
     
-    for(gr in 1:n_group){
-      
-      Nsurv[idS_lw[gr]:idS_up[gr]] ~ binomial( Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
-      
-    }
+  for(gr in 1:n_group){
+    
+    Nsurv[idS_lw[gr]:idS_up[gr]] ~ binomial( Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
+    
+  }
 }
 generated quantities {
   int Nsurv_ppc[n_data_Nsurv];

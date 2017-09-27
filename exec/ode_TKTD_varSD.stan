@@ -111,7 +111,9 @@ real linearInterp( real t_x, real t_before, real t_after, real y_before, real y_
     return(to_matrix(
       integrate_ode_rk45(TKTD_varSD, y0, t0, ts, theta, 
                          to_array_1d(append_row(to_vector(tconc), to_vector(conc))),
-                         x_i)));
+                         x_i,
+                         // additional control parameters for the solver: real rel_tol, real abs_tol, int max_num_steps
+                         10e-8, 10e-5, 1e3)));
   }
 }
 
