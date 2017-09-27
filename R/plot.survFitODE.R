@@ -1,5 +1,7 @@
 #' Plot
 #' 
+#' @import ggplot2
+#' 
 #' @export
 #' 
 plot.survFitODE <- function(x, data_type = NULL){
@@ -18,6 +20,8 @@ plot.survFitODE <- function(x, data_type = NULL){
                            qinf95 = apply(Nsurv_sim[[1]], 2, quantile, 0.025),
                            qsup95 = apply(Nsurv_sim[[1]], 2, quantile, 0.975))
     
+    y_limits = c(0,max(df_Nsurv$Nsurv, df_Nsurv$qsup95))
+    
   } else if(data_type == 'Rate'){
     
     Psurv_sim <- extract(x_stanfit, pars = 'Psurv_hat')
@@ -29,11 +33,14 @@ plot.survFitODE <- function(x, data_type = NULL){
                            qinf95 = apply(Psurv_sim[[1]], 2, quantile, 0.025),
                            qsup95 = apply(Psurv_sim[[1]], 2, quantile, 0.975))
     
+    y_limits = c(0,1)
+    
   } else stop("'data_type' must be 'Rate' for the survival rate, or 'Number' for the number of survivors")
   
   plot <- ggplot(data = df_Nsurv) + theme_bw() +
+      scale_y_continuous(limits = y_limits) +
       geom_pointrange( aes(x = time, y = q50, ymin = qinf95, ymax = qsup95, group = replicate), color = "red", size = 0.2) +
-      geom_line(aes(x = time, y = q50,  group = replicate), color = "red") + 
+      geom_line(aes(x = time, y = q50,  group = replicate), color = "red") +
       geom_ribbon(aes(x= time, ymin = qinf95, ymax = qsup95, group = replicate), fill = "pink", alpha = 0.2)+
       geom_point( aes(x = time, y = Nsurv, group = replicate) ) +
       #geom_errorbar( aes(x = time, ymin = qinf95, ymax = qsup95, group = replicate), color = "pink", width = 0.5) +
