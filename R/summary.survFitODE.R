@@ -85,7 +85,29 @@ summary.survFitODE <- function(x, ...) {
                       Q97.5 = c(kd[3], hb[3], alpha[3], beta[3]))
     
   }
-  
+  if(x$model_type == "PROPER"){
+    # kk
+    kk <- 10^qnorm(p = c(0.5, 0.025, 0.975),
+                   mean = param$kk_meanlog10,
+                   sd = param$kk_sdlog10)
+    
+    
+    # alpha
+    alpha <- 10^qnorm(p = c(0.5, 0.025, 0.975),
+                      mean = param$alpha_meanlog10,
+                      sd = param$alpha_sdlog10)
+    
+    # beta
+    beta <- 10^qunif(p = c(0.5, 0.025, 0.975),
+                     min = param$beta_minlog10,
+                     max = param$beta_maxlog10)
+    
+    res <- data.frame(parameters = c("kd", "hb", "kk", "alpha", "beta"),
+                      median = c(kd[1], hb[1], kk[1], alpha[1], beta[1]),
+                      Q2.5 = c(kd[2], hb[2], kk[2], alpha[2], beta[2]),
+                      Q97.5 = c(kd[3], hb[3], kk[3], alpha[3], beta[3]))
+    
+  }
   
   ans1 <- format(res, scientific = TRUE, digits = 4)
   
@@ -110,6 +132,17 @@ summary.survFitODE <- function(x, ...) {
     df_stanEstim <- as.data.frame(stanEstim)
     
     res2 <- data.frame(parameters = c("kd", "hb", "alpha", "beta"),
+                       median = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.5)),
+                       Q2.5 = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.025)),
+                       Q97.5 = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.975)))
+    
+  }
+  if(x$model_type == "PROPER"){
+    stanEstim <- extract(x$stanfit, pars = c("kd_log10", "hb_log10", "kk_log10", "alpha_log10", "beta_log10"))
+    
+    df_stanEstim <- as.data.frame(stanEstim)
+    
+    res2 <- data.frame(parameters = c("kd", "hb", "kk", "alpha", "beta"),
                        median = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.5)),
                        Q2.5 = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.025)),
                        Q97.5 = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.975)))
