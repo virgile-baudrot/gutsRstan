@@ -1,6 +1,16 @@
+#' @import morse
+#' 
 #' @export
 #' 
 modelDataStan <- function(data, model_type = NULL){
+  
+  #------------ gather replicate when data is constant:
+  if("survDataCstExp" %in% class(data)){ # data is a survData object
+    ## 1. Gather replicate when there is the same constante concentration
+    data <- morse:::gather_survDataCstExp(data)
+  }
+  
+  # --------------------------------------------------
   
   ls_OUT <- list()
   
@@ -169,7 +179,31 @@ priors_survData <- function(x, model_type = NULL){
     ### non effect threshold: z
     priorsList$z_meanlog10 <- (log10(conc_max) + log10(conc_min)) / 2
     priorsList$z_sdlog10 <- (log10(conc_max) - log10(conc_min)) / 4
-  } else stop("please, provide the 'model_type': 'IT' or 'SD'")
+  } else if (model_type == "PROPER"){
+    
+    ## priorsMinMax
+    priorsMinMax$kk_min <- kk_min
+    priorsMinMax$kk_max <- kk_max
+    
+    ## priorsList
+    ### killing rate parameter: kk
+    priorsList$kk_meanlog10 <- (log10(kk_max) + log10(kk_min)) / 2
+    priorsList$kk_sdlog10 <- (log10(kk_max) - log10(kk_min)) / 4
+
+    ## priorsMinMax
+    priorsMinMax$beta_min <- beta_minlog10
+    priorsMinMax$beta_max <- beta_maxlog10
+    
+    ## priorsList
+    ### non effect threshold: scale parameter & median of a log-logistic distribution
+    priorsList$alpha_meanlog10 <- (log10(conc_max) + log10(conc_min)) / 2
+    priorsList$alpha_sdlog10 <- (log10(conc_max) - log10(conc_min)) / 4
+    
+    ### shape parameter of a log-logistic distribution
+    priorsList$beta_minlog10 <- beta_minlog10
+    priorsList$beta_maxlog10 <- beta_maxlog10
+    
+  } else stop("please, provide the 'model_type': 'SD', 'IT' or 'PROPER'.")
   
   
   return(list(priorsList = priorsList,
