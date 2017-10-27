@@ -40,7 +40,7 @@ survFitODE <- function(data, model_type = NULL, under_type = NULL, distribution 
                  data = data,
                  dataStan = dataStan_withReplicate,
                  model_type = model_type,
-                 distibution = distribution)
+                 distribution = distribution)
   
   class(ls_out) <- "survFitODE"
   
