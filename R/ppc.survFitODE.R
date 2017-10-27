@@ -20,7 +20,7 @@ ppc <- function(x, ...){
 #' @export
 #' 
 #' 
-ppc.survFitODE <- function(x, ...){
+ppc.survFitODE <- function(x, facetting = FALSE, ...){
   
   x_stanfit <- x$stanfit
   x_data <- x$dataStan
@@ -38,9 +38,13 @@ ppc.survFitODE <- function(x, ...){
   ppc_plt <- ggplot(data = df_Nsurv) + theme_bw() +
     geom_abline() +
     scale_colour_manual(values = c("darkgreen", "red")) +
-    geom_pointrange( aes(x = Nsurv, y = q50, ymin = qinf95, ymax = qsup95, group = replicate, color = color), size = 0.4, alpha = 0.5) +
-    facet_wrap(~ replicate, scale = "free")
-  
+    geom_pointrange( aes(x = Nsurv, y = q50, ymin = qinf95, ymax = qsup95, group = replicate, color = color),
+                     size = 0.4, alpha = 0.5,position = position_dodge(width = 0.5))
+    
+  if(facetting == TRUE){
+    ppc_plt <- ppc_plt + facet_wrap(~ replicate, scale = "free")
+  }  
+    
   return(ppc_plt)
   
 }
