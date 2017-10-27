@@ -35,15 +35,17 @@ summary.survFitODE <- function(x, ...) {
   
   param <- x$dataStan
   
+  quantiles <- c(0.5, 0.025, 0.975)
+  
   # kd
-  kd <- 10^qnorm(p = c(0.5, 0.025, 0.975),
-                    mean = param$kd_meanlog10,
-                    sd = param$kd_sdlog10)
+  kd <- 10^qnorm(p = quantiles,
+                 mean = param$kd_meanlog10,
+                 sd = param$kd_sdlog10)
 
   
   
   # hb
-  hb <- 10^qnorm(p = c(0.5, 0.025, 0.975),
+  hb <- 10^qnorm(p = quantiles,
                     mean = param$hb_meanlog10,
                     sd = param$hb_sdlog10)
 
@@ -51,13 +53,13 @@ summary.survFitODE <- function(x, ...) {
   if(x$model_type == "SD"){
     
     # kk
-    kk <- 10^qnorm(p = c(0.5, 0.025, 0.975),
-                      mean = param$kk_meanlog10,
-                      sd = param$kk_sdlog10)
+    kk <- 10^qnorm(p = quantiles,
+                  mean = param$kk_meanlog10,
+                  sd = param$kk_sdlog10)
 
     
     ## z
-    z <- 10^qnorm(p = c(0.5, 0.025, 0.975),
+    z <- 10^qnorm(p = quantiles,
                      mean = param$z_meanlog10,
                      sd = param$z_sdlog10)
     
@@ -70,12 +72,12 @@ summary.survFitODE <- function(x, ...) {
   if(x$model_type == "IT"){
     
     # alpha
-    alpha <- 10^qnorm(p = c(0.5, 0.025, 0.975),
+    alpha <- 10^qnorm(p = quantiles,
                          mean = param$alpha_meanlog10,
                          sd = param$alpha_sdlog10)
 
     # beta
-    beta <- 10^qunif(p = c(0.5, 0.025, 0.975),
+    beta <- 10^qunif(p = quantiles,
                         min = param$beta_minlog10,
                         max = param$beta_maxlog10)
     
@@ -83,22 +85,21 @@ summary.survFitODE <- function(x, ...) {
                       median = c(kd[1], hb[1], alpha[1], beta[1]),
                       Q2.5 = c(kd[2], hb[2], alpha[2], beta[2]),
                       Q97.5 = c(kd[3], hb[3], alpha[3], beta[3]))
-    
+
   }
   if(x$model_type == "PROPER"){
     # kk
-    kk <- 10^qnorm(p = c(0.5, 0.025, 0.975),
+    kk <- 10^qnorm(p = quantiles,
                    mean = param$kk_meanlog10,
                    sd = param$kk_sdlog10)
     
-    
     # alpha
-    alpha <- 10^qnorm(p = c(0.5, 0.025, 0.975),
+    alpha <- 10^qnorm(p = quantiles,
                       mean = param$alpha_meanlog10,
                       sd = param$alpha_sdlog10)
     
     # beta
-    beta <- 10^qunif(p = c(0.5, 0.025, 0.975),
+    beta <- 10^qunif(p = quantiles,
                      min = param$beta_minlog10,
                      max = param$beta_maxlog10)
     
@@ -114,41 +115,19 @@ summary.survFitODE <- function(x, ...) {
   # 
   # quantiles of estimated model parameters
   #
+
+  df_stanEstim <- extract_MCMCparameters(x)
   
-  if(x$model_type == "SD"){
-    stanEstim <- extract(x$stanfit, pars = c("kd_log10", "hb_log10", "z_log10", "kk_log10"))
-    
-    df_stanEstim <- as.data.frame(stanEstim)
-    
-    res2 <- data.frame(parameters = c("kd", "hb", "z", "kk"),
-                       median = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.5)),
-                       Q2.5 = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.025)),
-                       Q97.5 = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.975)))
-    
-  }
-  if(x$model_type == "IT"){
-    stanEstim <- extract(x$stanfit, pars = c("kd_log10", "hb_log10", "alpha_log10", "beta_log10"))
-    
-    df_stanEstim <- as.data.frame(stanEstim)
-    
-    res2 <- data.frame(parameters = c("kd", "hb", "alpha", "beta"),
-                       median = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.5)),
-                       Q2.5 = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.025)),
-                       Q97.5 = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.975)))
-    
-  }
-  if(x$model_type == "PROPER"){
-    stanEstim <- extract(x$stanfit, pars = c("kd_log10", "hb_log10", "kk_log10", "alpha_log10", "beta_log10"))
-    
-    df_stanEstim <- as.data.frame(stanEstim)
-    
-    res2 <- data.frame(parameters = c("kd", "hb", "kk", "alpha", "beta"),
-                       median = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.5)),
-                       Q2.5 = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.025)),
-                       Q97.5 = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.975)))
-    
-  }
+  parameters <- switch(x$model_type,
+                       SD =  c("kd", "hb", "z", "kk"),
+                       IT =  c("kd", "hb", "alpha", "beta"),
+                       PROPER =  c("kd", "hb", "kk", "alpha", "beta"))
   
+  res2 <- data.frame(parameters = parameters,
+                     median = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.5)),
+                     Q2.5 = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.025)),
+                     Q97.5 = as.numeric(10^apply(df_stanEstim, 2, quantile, 0.975)))
+
   ans2 <- format(res2, scientific = TRUE, digits = 4)
   
   # print
