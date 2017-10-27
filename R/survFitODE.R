@@ -6,7 +6,7 @@
 #' 
 #' @export
 #' 
-survFitODE <- function(data, model_type = NULL, distribution = NULL, ...){
+survFitODE <- function(data, model_type = NULL, under_type = NULL, distribution = NULL, ...){
   
   ### ensures model_type is one of "SD" and "IT"
   if(is.null(model_type) || ! (model_type %in% c("SD","IT", "PROPER"))) {
@@ -23,6 +23,8 @@ survFitODE <- function(data, model_type = NULL, distribution = NULL, ...){
     model_object <- stanmodels$ode_TKTD_varSD
   } else if(model_type == "IT"){
     model_object <- stanmodels$ode_TKTD_varIT
+  } else if(model_type == "IT" && under_type == "2"){
+    model_object <- stanmodels$ode_TKTD_varIT_2
   } else if(model_type == "PROPER" && distribution == "loglogistic"){
     model_object <- stanmodels$ode_TKTD_varPROPER_loglogistic
   } else if(model_type == "PROPER" && distribution == "lognormal"){
