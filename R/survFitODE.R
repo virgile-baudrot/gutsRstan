@@ -44,5 +44,17 @@ survFitODE <- function(data, model_type = NULL, under_type = NULL, distribution 
   
   class(ls_out) <- "survFitODE"
   
+  ## ------ WARNINGS
+  
+  out_rhat <- summary(ls_out$stanfit)$summary[, "Rhat"]
+  
+  if (!all(out_rhat < 1.1, na.rm = TRUE)){
+    ##store warning in warnings table
+    msg <- "*** Markov chains did not converge! Do not analyze results! ***. You may increase iter number."
+    # warnings <- msgTableAdd(warnings, "rhat", msg)
+    ## print the message
+    warning(msg, call. = FALSE)
+  }
+  
   return(ls_out)
 }
