@@ -196,7 +196,7 @@ model {
   alpha_log10  ~ normal( alpha_meanlog10,   alpha_sdlog10 );
   beta_log10 ~ uniform( beta_minlog10 , beta_maxlog10 );
   
-  //y0 ~ exponential(10^6); // Initial condition for y0 have to be put close to 0 !!!
+  y0 ~ exponential(1e9); // Initial condition for y0 have to be put close to 0 !!!
     
   for(gr in 1:n_group){
     

@@ -166,7 +166,7 @@ transformed parameters{
   matrix[n_data_Nsurv,2] y_hat;
   vector[n_data_Nsurv] Psurv_hat;
   vector[n_data_Nsurv] Conditional_Psurv_hat;
-  
+
   param[1] = 10^hb_log10; // hb
   param[2] = 10^kd_log10; // kd
   param[3] = 10^z_log10; // z
@@ -193,7 +193,7 @@ model {
   kd_log10 ~ normal( kd_meanlog10, kd_sdlog10 );
   hb_log10 ~ normal( hb_meanlog10, hb_sdlog10 );
 
-  //y0 ~ exponential(10^6); // Initial condition for y0 have to be put close to 0 !!!
+  y0 ~ exponential(1e9); // Initial condition for y0 have to be put close to 0 !!!
 
   for(gr in 1:n_group){
     
