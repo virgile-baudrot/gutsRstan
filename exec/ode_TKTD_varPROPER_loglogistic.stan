@@ -158,9 +158,15 @@ data {
   real beta_minlog10;
   real beta_maxlog10;
 }
-parameters {
-  real<lower=0> y0[2]; // Must be positive,
+transformed data{
 
+  real<lower=0> y0[2];
+
+  y0[1] = 0;
+  y0[2] = 0;
+  
+}
+parameters {
   real kk_log10;
   real kd_log10;
   real hb_log10;
@@ -204,9 +210,7 @@ model {
   hb_log10 ~ normal( hb_meanlog10, hb_sdlog10 );
   alpha_log10  ~ normal( alpha_meanlog10,   alpha_sdlog10 );
   beta_log10 ~ uniform( beta_minlog10 , beta_maxlog10 );
-  
-  y0 ~ exponential(1e9); // Initial condition for y0 have to be put close to 0 !!!
-  
+
   z ~  loglogistic(10^alpha_log10, 10^beta_log10); // for log-logistic
   //z ~ lognormal(10^mu_log10, 10^sigma_log10); // for lognormal law with parameter mu and sigma
 

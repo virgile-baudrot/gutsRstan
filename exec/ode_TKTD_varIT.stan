@@ -145,9 +145,15 @@ data {
     real beta_minlog10;
     real beta_maxlog10;
 }
-parameters {
-  real<lower=0> y0[1]; // Must be positive,
+transformed data{
+
+  real<lower=0> y0[2];
+
+  y0[1] = 0;
+  y0[2] = 0;
   
+}
+parameters {
   real hb_log10;
   real kd_log10;
   real alpha_log10;
@@ -160,8 +166,8 @@ transformed parameters{
   
   matrix[n_data_Nsurv, 1] y_hat;
   // vector[n_data_Nsurv] loglogistic_cdf;
-  vector[n_data_Nsurv] Psurv_hat;
-  vector[n_data_Nsurv] Conditional_Psurv_hat;
+  vector<lower=0, upper=1>[n_data_Nsurv] Psurv_hat;
+  vector<lower=0, upper=1>[n_data_Nsurv] Conditional_Psurv_hat;
   
   param[1] = 10^hb_log10; // hb
   param[2] = 10^kd_log10; // kd
@@ -182,7 +188,9 @@ transformed parameters{
       
       /* Compared to model block, objects in transformed parameters are saved. So we need to reduce the number of objects */
       
-      Psurv_hat[i] = exp( - param[1] * tNsurv[i]) * (1- exp( -log1p_exp(-param[4] * (log(y_hat[i, 1]) - log(param[3]))) ));
+      Psurv_hat[i] = exp( - param[1] * tNsurv[i]) * (1- exp( -log1p_exp(-param[4] * (log(max(y_hat[idS_lw[gr]:i, 1])) - log(param[3]))) ));
+      
+      //Psurv_hat[i] = exp( - param[1] * tNsurv[i]) * (1- exp( -log1p_exp(-param[4] * (log(y_hat[i, 1]) - log(param[3]))) ));
       
       Conditional_Psurv_hat[i] =  i == idS_lw[gr] ? Psurv_hat[i] : Psurv_hat[i] / Psurv_hat[i-1] ;
           
@@ -195,9 +203,7 @@ model {
   kd_log10 ~ normal( kd_meanlog10, kd_sdlog10 );
   alpha_log10  ~ normal( alpha_meanlog10,   alpha_sdlog10 );
   beta_log10 ~ uniform( beta_minlog10 , beta_maxlog10 );
-  
-  y0 ~ exponential(1e9); // Initial condition for y0 have to be put close to 0 !!!
-    
+
   for(gr in 1:n_group){
     
     Nsurv[idS_lw[gr]:idS_up[gr]] ~ binomial( Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
