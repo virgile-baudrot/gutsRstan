@@ -31,7 +31,7 @@
 #' @export
 #' 
 
-summary.survFitODE <- function(x, ...) {
+summary.survFitODE <- function(x, quiet = FALSE, ...) {
   
   param <- x$dataStan
   
@@ -131,12 +131,14 @@ summary.survFitODE <- function(x, ...) {
   ans2 <- format(res2, scientific = TRUE, digits = 4)
   
   # print
-  cat("Summary: \n\n")
-  cat("Priors of the parameters (quantiles) (select with '$Qpriors'):\n\n")
-  print(ans1)
-  cat("\n\nPosterior of the parameters (quantiles) (select with '$Qposteriors'):\n\n")
-  print(ans2)
-
+  if(! quiet){
+    cat("Summary: \n\n")
+    cat("Priors of the parameters (quantiles) (select with '$Qpriors'):\n\n")
+    print(ans1)
+    cat("\n\nPosterior of the parameters (quantiles) (select with '$Qposteriors'):\n\n")
+    print(ans2)
+  }
+  
   invisible(list(Qpriors = ans1,
                  Qposteriors = ans2))
 }
