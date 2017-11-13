@@ -1,4 +1,4 @@
-#' survFitODE
+#' stan_guts
 #' 
 #' @param data A dataset to fit
 #' @param model_type The type of the model: 'SD', 'IT' or 'PROPER'
@@ -6,7 +6,14 @@
 #' 
 #' @export
 #' 
-survFitODE <- function(data, model_type = NULL, under_type = "1", distribution = NULL, ...){
+stan_guts <- function(data,
+                      model_type = NULL,
+                      distribution = NULL,
+                      adapt_delta = 0.95,
+                      rel_tol = 1e-10,
+                      real abs_tol = 1e-8,
+                      int max_num_steps = 1e3,
+                      ...){
   
   ### ensures model_type is one of "SD" and "IT"
   if(is.null(model_type) || ! (model_type %in% c("SD","IT", "PROPER"))) {
@@ -19,12 +26,11 @@ survFitODE <- function(data, model_type = NULL, under_type = "1", distribution =
   dataStan$replicate_Nsurv = NULL
   dataStan$Ninit = NULL
   
+  
   if(model_type == "SD"){
     model_object <- stanmodels$ode_TKTD_varSD
-  } else if(model_type == "IT" && under_type == "1"){
+  } else if(model_type == "IT"){
     model_object <- stanmodels$ode_TKTD_varIT
-  } else if(model_type == "IT" && under_type == "2"){
-    model_object <- stanmodels$ode_TKTD_varIT_2
   } else if(model_type == "PROPER" && distribution == "loglogistic"){
     model_object <- stanmodels$ode_TKTD_varPROPER_loglogistic
   } else if(model_type == "PROPER" && distribution == "lognormal"){
@@ -34,6 +40,7 @@ survFitODE <- function(data, model_type = NULL, under_type = "1", distribution =
   fit <- rstan::sampling(
     object = model_object,
     data = dataStan,
+    control = list(adapt_delta = adapt_delta),
     ...)
   
   ls_out <- list(stanfit = fit,
@@ -42,7 +49,7 @@ survFitODE <- function(data, model_type = NULL, under_type = "1", distribution =
                  model_type = model_type,
                  distribution = distribution)
   
-  class(ls_out) <- "survFitODE"
+  class(ls_out) <- "stanTKTD"
   
   ## ------ WARNINGS
   

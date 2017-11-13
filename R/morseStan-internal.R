@@ -16,7 +16,7 @@ extract_MCMCparameters <- function(x){
   return(df_stanEstim)
 }
 
-#' Extract parameters name for a \code{survFitODE} object
+#' Extract parameters name for a \code{stanTKTD} object
 #' 
 #' @export
 #'  
@@ -42,9 +42,9 @@ extract_MCMCppc <- function(x){
   return(mat_stanPredict)
 }
 
-#' Extract the \code{stanfit} object of a \code{survFitODE} object
+#' Extract the \code{stanfit} object of a \code{stanTKTD} object
 #' 
-#' Extract the \code{stanfit} object of a \code{survFitODE} object.
+#' Extract the \code{stanfit} object of a \code{stanTKTD} object.
 #' 
 #' @param x an object used to select a method
 #' @param \dots Further arguments to be passed to generic methods
@@ -55,19 +55,19 @@ extract_stanfit <- function(x, ...){
   UseMethod("extract_stanfit")
 }
 
-#' Extract the \code{stanfit} object of a \code{survFitODE} object
+#' Extract the \code{stanfit} object of a \code{stanTKTD} object
 #' 
-#' @param x a,n object of class \code{survFitODE}
+#' @param x a,n object of class \code{stanTKTD}
 #' 
 #' @export
 #'  
-extract_stanfit.survFitODE <- function(x){
+extract_stanfit.stanTKTD <- function(x){
   return(x$stanfit)
 }
 
-#' Extract the \code{stanfit} object of a \code{survFitODE} object
+#' Extract the \code{stanfit} object of a \code{stanTKTD} object
 #' 
-#' Extract the \code{stanfit} object of a \code{survFitODE} object.
+#' Extract the \code{stanfit} object of a \code{stanTKTD} object.
 #' 
 #' @param x an object used to select a method
 #' @param \dots Further arguments to be passed to generic methods
@@ -82,7 +82,7 @@ extract_log_lik <- function(x, ...){
 #' 
 #' @export
 #' 
-extract_log_lik.survFitODE <- function(x){
+extract_log_lik.stanTKTD <- function(x){
   
   # Observation
   df_obs <- data.frame(Nsurv = x$dataStan$Nsurv,

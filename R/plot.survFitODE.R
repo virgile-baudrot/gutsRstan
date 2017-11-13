@@ -4,7 +4,7 @@
 #' 
 #' @export
 #' 
-plot.survFitODE <- function(x, data_type = NULL){
+plot.stanTKTD <- function(x, data_type = NULL){
 
   x_stanfit <- x$stanfit
   x_data <- x$dataStan

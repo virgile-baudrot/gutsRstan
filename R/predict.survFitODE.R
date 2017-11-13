@@ -1,6 +1,6 @@
 #' Prediction
 #' 
-#' @param x An object of class \code{survFitODE}
+#' @param x An object of class \code{stanTKTD}
 #' @param new_data A new data set with concentration time point (a data.frame with 2 column,
 #'  time in the first column and concentration in the second)
 #' 
@@ -9,7 +9,7 @@
 #' @export
 #' 
 #' 
-predict.survFitODE <- function(x, new_data = NULL,
+predict.stanTKTD <- function(x, new_data = NULL,
                                interpolate_length = 1e2,
                                interpolate_method = "linear"){
 

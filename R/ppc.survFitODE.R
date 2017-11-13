@@ -1,6 +1,6 @@
 #' Posterior predictive check plot
 #' 
-#' Plots posterior predictive check for \code{survFitODE} objects.
+#' Plots posterior predictive check for \code{stanTKTD} objects.
 #' 
 #' @param x an object used to select a method
 #' @param \dots Further arguments to be passed to generic methods
@@ -14,13 +14,13 @@ ppc <- function(x, ...){
 
 #' PPC
 #' 
-#' @param x an object of class \code{survFitODE}
+#' @param x an object of class \code{stanTKTD}
 #' @param \dots Further arguments to be passed to generic methods
 #' 
 #' @export
 #' 
 #' 
-ppc.survFitODE <- function(x, facetting = FALSE, ...){
+ppc.stanTKTD <- function(x, facetting = FALSE, ...){
   
   x_stanfit <- x$stanfit
   x_data <- x$dataStan
