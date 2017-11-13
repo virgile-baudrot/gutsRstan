@@ -6,7 +6,7 @@
 #' 
 #' @export
 #' 
-survFitODE <- function(data, model_type = NULL, under_type = NULL, distribution = NULL, ...){
+survFitODE <- function(data, model_type = NULL, under_type = "1", distribution = NULL, ...){
   
   ### ensures model_type is one of "SD" and "IT"
   if(is.null(model_type) || ! (model_type %in% c("SD","IT", "PROPER"))) {
@@ -21,7 +21,7 @@ survFitODE <- function(data, model_type = NULL, under_type = NULL, distribution 
   
   if(model_type == "SD"){
     model_object <- stanmodels$ode_TKTD_varSD
-  } else if(model_type == "IT"){
+  } else if(model_type == "IT" && under_type == "1"){
     model_object <- stanmodels$ode_TKTD_varIT
   } else if(model_type == "IT" && under_type == "2"){
     model_object <- stanmodels$ode_TKTD_varIT_2
@@ -49,8 +49,12 @@ survFitODE <- function(data, model_type = NULL, under_type = NULL, distribution 
   out_rhat <- summary(ls_out$stanfit)$summary[, "Rhat"]
   
   if (!all(out_rhat < 1.1, na.rm = TRUE)){
-    ##store warning in warnings table
-    msg <- "*** Markov chains did not converge! Do not analyze results! ***. You may increase iter number."
+    ##possibility to store warning in a 'warnings table'
+    msg <- "*** Markov chains did not converge! Do not analyze results! ***. 
+Plot MCMC chains and try the following options:
+ (1) if one or more chain are a simple stable line, increase 'adapt_delta' (default is 0.95).
+ (2) if the variabbility between chain is great, you can increase the number of iteration (default is 2000 iteration).
+ (3) if 'Conditional_Psurv_hat' is greater than 1, the ODE integration is wrong. So you can reduce the tolerance of the ODE integrator."
     # warnings <- msgTableAdd(warnings, "rhat", msg)
     ## print the message
     warning(msg, call. = FALSE)
