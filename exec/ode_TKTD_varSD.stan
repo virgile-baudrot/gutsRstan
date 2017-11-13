@@ -1,8 +1,5 @@
 functions {
-  /* bisectioning search of the index i such that sorted[i] < x < sorted[i+1]
-  this come from Sebastian Weber
-  */
-  
+
   // #include "common_functions.stan"
 
 /* for multiple .stan files */
@@ -113,7 +110,7 @@ real linearInterp( real t_x, real t_before, real t_after, real y_before, real y_
                          to_array_1d(append_row(to_vector(tconc), to_vector(conc))),
                          x_i,
                          // additional control parameters for the solver: real rel_tol, real abs_tol, int max_num_steps
-                         10e-8, 10e-5, 1e3)));
+                         10e-10, 10e-8, 1e3)));
   }
 }
 
@@ -181,15 +178,15 @@ transformed parameters{
   param[4] = 10^kk_log10; // kk
   
   for(gr in 1:n_group){
-  /* initial time must be less than t0 = 0, so we use a very small close small number -1e-8 */
-    y_hat[idS_lw[gr]:idS_up[gr],1:2] = solve_TKTD_varSD(y0, -1e-9, tNsurv[idS_lw[gr]:idS_up[gr]], param, tconc[idC_lw[gr]:idC_up[gr]], conc[idC_lw[gr]:idC_up[gr]]);
+  /* initial time must be less than t0 = 0, so we use a very small close small number -1e-9 */
+   y_hat[idS_lw[gr]:idS_up[gr],1:2] = solve_TKTD_varSD(y0, -1e-9, tNsurv[idS_lw[gr]:idS_up[gr]], param, tconc[idC_lw[gr]:idC_up[gr]], conc[idC_lw[gr]:idC_up[gr]]);
     
     Psurv_hat[idS_lw[gr]:idS_up[gr]] = exp( - y_hat[idS_lw[gr]:idS_up[gr], 2]);
     
     for(i in idS_lw[gr]:idS_up[gr]){
   
       Conditional_Psurv_hat[i] =  i == idS_lw[gr] ? Psurv_hat[i] : Psurv_hat[i] / Psurv_hat[i-1] ;
-  
+
     }
   }
 

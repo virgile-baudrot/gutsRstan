@@ -102,7 +102,7 @@ functions {
     max_z[1] = 0;
     max_z[2] = y[1] - z;
     
-    dy_dt[2] = 1e99* max(max_z) + hb;
+    dy_dt[2] = 1e99*max(max_z) + hb;
     
     return(dy_dt);
   }
@@ -117,7 +117,7 @@ functions {
                          to_array_1d(append_row(to_vector(tconc), to_vector(conc))),
                          x_i,
                          // additional control parameters for the solver: real rel_tol, real abs_tol, int max_num_steps
-                         10e-8, 10e-5, 1e3)));
+                         10e-10, 10e-8, 1e6)));
   }
 }
 
