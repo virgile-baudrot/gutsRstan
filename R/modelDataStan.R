@@ -34,8 +34,8 @@ modelDataStan <- function(data, model_type = NULL){
   
   ls_OUT$replicate_conc <- data_Conc$replicate
     
-  ls_OUT$idC_lw <- data_Conc_id $idC_lw
-  ls_OUT$idC_up <- data_Conc_id $idC_up
+  ls_OUT$idC_lw <- data_Conc_id$idC_lw
+  ls_OUT$idC_up <- data_Conc_id$idC_up
   
   # Survival
   data_Nsurv <- data %>%

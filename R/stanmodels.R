@@ -18,9 +18,11 @@
 # This file is only intended to be used during the installation process
 # nocov start
 MODELS_HOME <- "exec"
+
 if (!file.exists(MODELS_HOME)) MODELS_HOME <- sub("R$", "exec", getwd())
 
 stan_files <- dir(MODELS_HOME, pattern = "stan$", full.names = TRUE)
+
 stanmodels <- sapply(stan_files, function(f) {
   model_cppname <- sub("\\.stan$", "", basename(f))
   isystem <- system.file("chunks", package = methods::getPackageName(environment(), FALSE))
