@@ -10,9 +10,9 @@ stan_guts <- function(data,
                       model_type = NULL,
                       distribution = NULL,
                       adapt_delta = 0.95,
-                      rel_tol = 1e-10,
-                      real abs_tol = 1e-8,
-                      int max_num_steps = 1e3,
+                      rel_tol = 1-10,
+                      abs_tol = 1e-8,
+                      max_num_steps = 1e3,
                       ...){
   
   ### ensures model_type is one of "SD" and "IT"
