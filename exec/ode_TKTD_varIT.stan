@@ -145,19 +145,20 @@ data {
     real beta_minlog10;
     real beta_maxlog10;
 }
-transformed data{
-
-  real<lower=0> y0[2];
-
-  y0[1] = 0;
-  y0[2] = 0;
-  
-}
+// transformed data{
+// 
+//   real<lower=0> y0[1];
+// 
+//   y0[1] = 0;
+// 
+// }
 parameters {
   real hb_log10;
   real kd_log10;
   real alpha_log10;
   real beta_log10;
+  
+  real<lower=0> y0[1];
   
 }
 transformed parameters{
@@ -182,13 +183,11 @@ transformed parameters{
   for(gr in 1:n_group){
     for(i in idS_lw[gr]:idS_up[gr]){
       /* To compute the loglogistic_cdf, it is better to compute a loglogistic_cdf_log  */
-      
-      // loglogistic_cdf[i] = exp( -log1p_exp(-param[4] * (log(y_hat[i, 1]) - log(param[3]))) );
-      // Psurv_hat[i] = exp( - param[1] * tNsurv[i]) * (1- loglogistic_cdf[i]);
-      
-      /* Compared to model block, objects in transformed parameters are saved. So we need to reduce the number of objects */
-      
       Psurv_hat[i] = exp( - param[1] * tNsurv[i]) * (1- exp( -log1p_exp(-param[4] * (log(max(y_hat[idS_lw[gr]:i, 1])) - log(param[3]))) ));
+      
+      //Psurv_hat[i] = exp( - param[1] * tNsurv[i]) * (1- 1/(1 + (max(y_hat[idS_lw[gr]:i, 1])/param[3])^(-param[4]) ));
+      
+      //Psurv_hat[i] = exp( - param[1] * tNsurv[i]) * (1- max(y_hat[idS_lw[gr]:i, 1])^param[4]/(max(y_hat[idS_lw[gr]:i, 1])^param[4]  + param[3]^param[4] ));
       
       //Psurv_hat[i] = exp( - param[1] * tNsurv[i]) * (1- exp( -log1p_exp(-param[4] * (log(y_hat[i, 1]) - log(param[3]))) ));
       
@@ -203,6 +202,8 @@ model {
   kd_log10 ~ normal( kd_meanlog10, kd_sdlog10 );
   alpha_log10  ~ normal( alpha_meanlog10,   alpha_sdlog10 );
   beta_log10 ~ uniform( beta_minlog10 , beta_maxlog10 );
+
+  y0 ~ exponential(1e9);
 
   for(gr in 1:n_group){
     
