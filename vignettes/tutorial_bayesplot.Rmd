@@ -1,0 +1,449 @@
+---
+title: "Practical guide for ploting 'morseStan' object with the 'bayesplot' package"
+author: "Virgile Baudrot"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r loadPackage}
+library("rstan")
+library("bayesplot")
+library("loo")
+library("morseStan")
+library("dplyr")
+```
+
+
+```{r loadData}
+load(file = "DATA_SIMULATION/fit_cluster/fit_PRZ_cstSD.rda") ; fit_stan_guts <- fit_PRZ_cstSD
+```
+
+The vignette `xxx` describes how to obtain a `stanfit` object with the `morseStan` package. Here is a simple example:
+
+```{r stanTKTDobject}
+# EITHER
+fit <- fit_stan_guts$stanfit
+# OR
+# fit <- extract_stanfit(fit_stan_guts)
+```
+
+Then, with this `stanfit` object, we describe how to use the `bayesplot` package to analyze MCMC and PPC. As fully explained in the package:
+- The **bayesplot MCMC** module provides various plotting functions for creating graphical displays of Markov chain Monte Carlo (MCMC) simulations.
+- The **bayesplot PPC** module provides various plotting functions for creating graphical displays comparing observed data to simulated data from the posterior predictive distribution.
+
+# MCMC
+
+```{r posteriorMCMC}
+params <- extract_MCMCparameters_name(fit_stan_guts)
+params 
+
+# fit <- extract_stanfit(fit_stan_guts)
+posterior <- as.array(fit)
+dim(posterior)
+```
+
+## MCMC-distribution
+
+
+```{r}
+mcmc_hist(posterior, pars = params)
+```
+
+```{r}
+mcmc_dens(posterior, pars = params)
+```
+
+
+```{r}
+mcmc_hist_by_chain(posterior, pars = params)
+```
+
+```{r}
+mcmc_dens_overlay(posterior, pars = params)
+```
+
+```{r}
+mcmc_violin(posterior, pars = params, probs = c(0.1, 0.5, 0.9))
+```
+
+You can also plot the likelihood distribution
+
+```{r}
+mcmc_hist(posterior, pars = "lp__")
+mcmc_dens_overlay(posterior, pars = "lp__")
+```
+
+
+## MCMC-intervals
+
+
+```{r}
+mcmc_intervals(posterior, pars = params)
+```
+
+
+```{r}
+mcmc_areas(
+  posterior, 
+  pars = params,
+  prob = 0.8, # 80% intervals
+  prob_outer = 0.99, # 99%
+  point_est = "median"
+)
+```
+
+## MCMC-scatterplots
+
+```{r}
+mcmc_scatter(posterior, pars = c("hb_log10", "kd_log10"), 
+             size = 1.5, alpha = 0.5)
+mcmc_scatter(posterior, pars = c("hb_log10", "lp__"), 
+             size = 1.5, alpha = 0.5)
+```
+
+```{r}
+mcmc_hex(posterior, pars = c("hb_log10", "kd_log10"))
+```
+
+
+```{r}
+mcmc_pairs(posterior, pars = params,
+           off_diag_args = list(size = 1.5))
+```
+
+## MCMC-traces
+
+```{r}
+mcmc_trace(posterior, pars = params)
+```
+
+```{r}
+mcmc_trace(posterior, pars = params,
+           facet_args = list(ncol = 1, strip.position = "left"))
+```
+
+```{r}
+mcmc_trace_highlight(posterior, pars = params, highlight = 2)
+```
+
+## MCMC-combos
+
+```{r}
+mcmc_combo(posterior, pars = params)
+```
+
+```{r}
+mcmc_combo(posterior, pars = params, combo = c("dens_overlay", "trace"))
+```
+
+
+## MCMC-diagnostics
+
+### Rhat: potential scale reduction statistic
+
+The best generic diagnostic for the accuracy of a Markov chain Monte Carlo algorithm is the split R-hat statistic which quantifies the consistency of an ensemble of Markov chains. The idea is to run multiple Markov chains, 4 is an okay default but running more makes the diagnostic more sensitive, and ensure that they're all exploring the same regions of parameter space. If even one chain is inconsistent with the others then all of the chains are suspect! In practice we have found that requiring Rhat < 1.1 is a good default requirement for each parameter.
+
+One way to monitor whether a chain has converged to the equilibrium distribution is to compare its behavior to other randomly initialized chains. This is the motivation for the Gelman and Rubin (1992) potential scale reduction statistic, R̂ . The R̂  statistic measures the ratio of the average variance of samples within each chain to the variance of the pooled samples across chains; if all chains are at equilibrium, these will be the same and R̂  will be one. If the chains have not converged to a common distribution, the R̂  statistic will be greater than one. (Stan Development Team, 2016).
+
+```{r}
+rhats <- rhat(fit)
+print(rhats)
+```
+
+
+```{r}
+mcmc_rhat(rhats[params])
+
+mcmc_rhat(rhats[params]) + yaxis_text(hjust = 1)
+
+mcmc_rhat(rhats[params]) + yaxis_text(hjust = 0)
+```
+
+```{r}
+mcmc_rhat_hist(rhats[params])
+```
+
+```{r}
+mcmc_rhat_data(rhats[params])
+```
+
+
+### Effective sample size
+
+The effective sample size is an estimate of the number of independent draws from the posterior distribution of the estimand of interest. Because the draws within a Markov chain are not independent if there is autocorrelation, the effective sample size, neff, will be smaller than the total sample size, N. The larger the ratio of neff to N the better.
+
+In the plot, the points representing the values of neff/N are colored based on whether they are less than 0.1, between 0.1 and 0.5, or greater than 0.5. These particular values are arbitrary in that they have no particular theoretical meaning, but a useful heuristic is to worry about any neff/N less than 0.1.
+
+When Markov chains explore very slowly, slow chains lead to low numbers of effective samples, and if there are too few effective samples then we can't accurate estimate the number of effective samples at all. A good check for such issues is the number of effective samples per iteration -- if N_eff / N < 0.001 then you should be suspect of the effective sample size calculation.
+
+One important thing to keep in mind is that these ratios will depend not only on the model being fit but also on the particular MCMC algorithm used.
+
+
+If we let $m$ be the number of chaines, and $n$ the number of simulation draws, then the effective sample size is given by:
+
+\[
+n_{eff} = \frac{m \times n}{1 + 2 \sum_{t=1}^\infty \rho_t}
+\]
+
+```{r}
+ratios_cp <- neff_ratio(fit)
+print(ratios_cp)
+```
+
+```{r}
+mcmc_neff(ratios_cp[params], size = 2)
+```
+
+```{r}
+mcmc_neff_hist(ratios_cp[params])
+```
+
+```{r}
+mcmc_neff_data(ratios_cp[params])
+```
+
+### Autocorrelation
+
+As mentioned above, neff/N
+decreases as autocorrelation becomes more extreme. We can visualize the autocorrelation using the mcmc_acf (line plot) or mcmc_acf_bar (bar plot) functions. For the selected parameters, these functions show the autocorrelation for each Markov chain separately up to a user-specified number of lags.
+
+```{r}
+mcmc_acf(posterior, pars = params, lags = 20)
+```
+
+```{r}
+mcmc_acf_bar(posterior, pars = params, lags = 10)
+```
+
+## MCMC-nuts: Diagnostics for the No-U-Turn Sampler
+
+```{r}
+lp_fit <- log_posterior(fit)
+np_fit <- nuts_params(fit)
+```
+
+### Acceptance
+
+```{r}
+mcmc_nuts_acceptance(np_fit, lp_fit)
+```
+
+```{r}
+mcmc_nuts_stepsize(np_fit, lp_fit)
+```
+
+```{r}
+mcmc_nuts_treedepth(np_fit, lp_fit)
+```
+
+
+### Divergence
+
+To look deeper at the information conveyed by the divergences we can use the mcmc_nuts_divergence function:
+
+```{r}
+mcmc_nuts_divergence(np_fit, lp_fit)
+```
+
+In the top panel we see the distribution of the log-posterior when there was no divergence vs the distribution when there was a divergence. Divergences often indicate that some part of the posterior isn’t being explored and the plot confirms that $lp \vert Divergence$ indeed has lighter tails than $lp \vert No divergence$.
+
+The bottom panel shows the same thing but instead of the log-posterior the NUTS acceptance statistic is shown.
+
+Specifying the optional chain argument will overlay the plot just for a particular Markov chain on the plot for all chains combined:
+
+```{r}
+mcmc_nuts_divergence(np_fit, lp_fit, chain = 4)
+```
+
+If there are only a few divergences we can often get rid of them by increasing the target acceptance rate (`adapt_delta`), which has the effect of lowering the step size used by the sampler and allowing the Markov chains to explore more complicated curvature in the target distribution.
+
+### Energy and Bayesian fraction of missing information
+
+The mcmc_nuts_energy function creates plots similar to those presented in Betancourt (2017). While `mcmc_nuts_divergence` can identify light tails and incomplete exploration of the target distribution, the `mcmc_nuts_energy` function can identify overly heavy tails that are also challenging for sampling. Informally, the energy diagnostic for HMC (and the related energy-based Bayesian fraction of missing information) quantifies the heaviness of the tails of the posterior distribution.
+
+The plot created by `mcmc_nuts_energy` shows overlaid histograms of the (centered) marginal energy distribution $\pi_E$ and the first-differenced distribution $\pi_{\Delta E}$.
+
+```{r}
+mcmc_nuts_energy(np_fit)
+```
+
+When  these  distributions  are well-matched the Hamiltonian Markov chain should perform robustly, but if the energy transitions density is significantly narrower than the marginal energy distribution then the chain may not be able to completely explore the tails of the target distribution.
+
+## MCMC-parcoord
+
+```{r}
+mcmc_parcoord(posterior, np = np_fit)
+```
+
+
+```{r}
+mcmc_scatter(
+  posterior_cp, 
+  pars = params, 
+  np = np_fit
+)
+```
+
+# PPC
+
+## PPC-distribution
+
+`yrep` is and An S by N matrix of draws from the posterior predictive distribution, where S is the size of the posterior sample (or subset of the posterior sample used to generate yrep) and N is the number of observations (the length of y). 
+
+```{r}
+yrep_fit <- extract_MCMCppc(fit_stan_guts)
+dim(yrep_fit)
+y_fit <- fit_stan_guts$dataStan$Nsurv
+group_fit <- fit_stan_guts$dataStan$replicate_Nsurv
+```
+
+```{r}
+ppc_dens_overlay(y_fit, yrep_fit[1:200,])
+```
+
+To better understand what `ppc_dens` is doing, the classical R equivalent script could be:
+
+```{r}
+plot(density(y_fit), xlim = c(min(y_fit),max(y_fit)), ylim=c(0,0.15))
+for(i in 1:200){
+  lines(density(yrep_fit[i,]), col="lightgrey")
+}
+lines(density(y_fit)) # Because the original black line disappear :-) !
+```
+
+```{r}
+ppc_ecdf_overlay(y_fit, yrep_fit[1:200,])
+```
+
+Again, the plot in the  classical cumulative distribution in R could be: 
+
+```{r}
+plot(ecdf(y_fit), xlim = c(min(y_fit),max(y_fit)), ylim=c(0,1))
+for(i in 1:200){
+  lines(ecdf(yrep_fit[i,]), col="lightgrey")
+}
+lines(ecdf(y_fit)) # Because the original black line disappear :-) !
+```
+
+And with histogram:
+
+```{r}
+ppc_hist(y_fit, yrep_fit[1:10,])
+```
+
+```{r}
+ppc_freqpoly(y_fit, yrep_fit[1:10,])
+```
+
+```{r}
+ppc_freqpoly_grouped(y_fit, yrep_fit[1:4,], group = group_fit)
+```
+
+
+```{r}
+ppc_violin_grouped(y_fit, yrep_fit[1:50,], group = group_fit)
+```
+
+## PPC-loo: Leave-One-Out (LOO) predictive checks.
+
+```{r}
+log_lik <- extract_log_lik(fit_stan_guts)
+lw_fit <- psislw(-log_lik$mat_log_lik, cores = 2)$lw_smooth
+```
+
+```{r}
+ppc_loo_pit(y_fit, yrep_fit, lw = lw_fit)
+```
+
+```{r}
+ppc_loo_ribbon(y_fit, yrep_fit, lw = lw_fit)
+```
+
+```{r}
+ppc_loo_intervals(y_fit, yrep_fit, lw = lw_fit, prob = 0.95)
+```
+
+### Note that we provide a function for ppc:
+
+The function for ppc `ppc` is very similar with `ppc_loo_intervals` with the difference that it plot the `y_fit` in the `x_axis`.
+
+```{r}
+ppc(fit_stan_guts)
+```
+
+## PPC error
+
+```{r}
+ppc_error_hist_grouped(y_fit, yrep_fit[1:50,], group = group_fit)
+```
+
+```{r}
+ppc_error_scatter_avg(y_fit, yrep_fit[1:50,], group = group_fit)
+```
+
+## PPC interval
+
+```{r}
+ppc_intervals_grouped(y_fit, yrep_fit[1:50,], group = group_fit)
+```
+
+
+```{r}
+ppc_ribbon_grouped(y_fit, yrep_fit[1:50,], group = group_fit)
+```
+
+## PPC stat
+
+```{r}
+ppc_stat(y_fit, yrep_fit, stat = "mean")
+```
+
+```{r}
+ppc_stat(y_fit, yrep_fit, stat = "sd")
+```
+
+```{r}
+ppc_stat_grouped(y_fit, yrep_fit, stat = "mean", group = group_fit)
+```
+
+```{r}
+ppc_stat_freqpoly_grouped(y_fit, yrep_fit, stat = "mean", group = group_fit)
+```
+
+```{r}
+ppc_stat(y_fit, yrep_fit, stat = "median")
+```
+
+```{r}
+ppc_stat(y_fit, yrep_fit, stat = "max")
+```
+
+```{r}
+ppc_stat(y_fit, yrep_fit, stat = "min")
+```
+
+```{r}
+ppc_stat_2d(y_fit, yrep_fit, stat = c("mean","sd"))
+```
+
+
+# ShinyStan
+
+All previous plot coulb be obtained with the `shinystan` app.
+
+```{r}
+#library(shinystan)
+```
+
+
+```{r}
+# launch_shinystan(fit)
+```
+

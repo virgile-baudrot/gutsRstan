@@ -1,0 +1,100 @@
+---
+title: "Practical guide for Leave-One-Out Cross-Validation and WAIC for Bayesian Models in 'morseStan' using the 'loo' package."
+author: "Virgile Baudrot"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r loadPackage}
+library("rstan")
+library("loo")
+library("dplyr")
+library("morseStan")
+```
+
+
+```{r loadData}
+load(file = "DATA_SIMULATION/fit_PRZ_cstSD.rda")
+load(file = "DATA_SIMULATION/fit_PRZ_cstIT.rda")
+```
+
+The vignette `xxx` describes how to obtain a `stanfit` object with the `morseStan` package. Here is a simple example:
+
+
+### Compute log-likelihood
+
+```{r}
+log_lik_PRZ_cstSD <- extract_log_lik(fit_PRZ_cstSD)
+plot(density(log_lik_PRZ_cstSD$vec_log_lik))
+```
+
+```{r}
+log_lik_PRZ_cstIT <- extract_log_lik(fit_PRZ_cstIT)
+plot(density(log_lik_PRZ_cstIT$vec_log_lik))
+```
+
+### Compute LOO
+
+```{r}
+loo_PRZ_cstSD <- loo(log_lik_PRZ_cstSD$mat_log_lik)
+print(loo_PRZ_cstSD)
+loo_PRZ_cstIT <- loo(log_lik_PRZ_cstIT$mat_log_lik)
+print(loo_PRZ_cstIT)
+```
+
+### Compute WAIC
+
+```{r}
+waic_PRZ_cstSD <- waic(log_lik_PRZ_cstSD$mat_log_lik)
+print(waic_PRZ_cstSD)
+waic_PRZ_cstIT <- waic(log_lik_PRZ_cstIT$mat_log_lik)
+print(waic_PRZ_cstIT)
+```
+
+### Compare
+
+```{r}
+diff_loo <- compare(loo_PRZ_cstIT, loo_PRZ_cstSD)
+print(diff_loo)
+```
+
+```{r}
+diff_waic <- compare(waic_PRZ_cstIT, waic_PRZ_cstSD)
+print(diff_waic)
+```
+
+### PSISLW
+
+
+```{r}
+lw_PRZ_cstSD <- psislw(-log_lik_PRZ_cstSD$mat_log_lik, cores = 2)$lw_smooth
+dim(lw_PRZ_cstSD)
+```
+
+```{r}
+yrep_fit_PRZ_cstSD <- extract_MCMCppc(fit_PRZ_cstSD)
+dim(yrep_fit_PRZ_cstSD)
+```
+
+```{r}
+E_loo(yrep_fit_PRZ_cstSD, lw_PRZ_cstSD, type = "mean")
+E_loo(yrep_fit_PRZ_cstSD, lw_PRZ_cstSD, type = "var")
+E_loo(yrep_fit_PRZ_cstSD, lw_PRZ_cstSD, type = "quantile", probs = 0.5) # median
+E_loo(yrep_fit_PRZ_cstSD, lw_PRZ_cstSD, type = "quantile", probs = c(0.1, 0.9))
+```
+
+### PARETO
+
+```{r}
+pareto_k_table(lw_PRZ_cstSD)
+pareto_k_ids(lw_PRZ_cstSD, threshold = 0.5)
+```
+
+
