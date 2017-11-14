@@ -4,7 +4,7 @@
 #' 
 #' @export
 #' 
-plot.stanTKTD <- function(x, data_type = NULL){
+plot.stanTKTD <- function(x, data_type = "Rate"){
 
   x_stanfit <- x$stanfit
   x_data <- x$dataStan
