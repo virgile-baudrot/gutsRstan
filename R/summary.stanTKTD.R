@@ -1,9 +1,9 @@
-#' Summary for \code{survFitODE} objects
+#' Summary for \code{stanTKTD} objects
 #'
-#' This is the generic \code{summary} S3 methode for the \code{survFit} class.
+#' This is the generic \code{summary} S3 methode for the \code{stanTKTD} class.
 #' It shows the quantiles of priors and posteriors on parameters.
 #'
-#' @param object An object of class \code{survFitODE}
+#' @param object An object of class \code{stanTKTD}
 #'
 #' @return The function returns a list with the following fields:
 #' \item{Qpriors}{quantiles for the model's prior}
@@ -17,10 +17,10 @@
 #' dat <- survData(propiconazole)
 #'
 #' \dontrun{
-#' # (3) Run the survFit function
-#' out <- survFitODE(dat, model_type = "SD")
+#' # (3) Run the 'stan_guts' function
+#' out <- stan_guts(dat, model_type = "SD")
 #'
-#' # (4) summarize the survFit object
+#' # (4) summarize the stanTKTD object
 #' summary(out)
 #' }
 #'
@@ -31,7 +31,7 @@
 #' @export
 #' 
 
-summary.survFitODE <- function(x, quiet = FALSE, ...) {
+summary.stanTKTD <- function(x, quiet = FALSE, ...) {
   
   param <- x$dataStan
   
