@@ -1,4 +1,4 @@
 cleanup*
-^\.travis\.yml$
+^\.travis\.yml$ 
 ^.*\.Rproj$
 ^\.Rproj\.user$
