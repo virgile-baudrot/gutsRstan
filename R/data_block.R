@@ -2,15 +2,35 @@
 #' 
 #' @export
 #' 
-modelDataStan <- function(data, model_type = NULL){
+modelDataStan <- function(data, model_type = NULL, ode_control = NULL){
   
-  #------------ gather replicate when data is constant:
+  #------------ pool replicate when data is constant:
   if("survDataCstExp" %in% class(data)){ # data is a survData object
-    ## 1. Gather replicate when there is the same constante concentration
-    data <- morse:::gather_survDataCstExp(data)
+    ## pool replicate when there is the same constante concentration
+    data <- pool_survData(data)
   }
   
   # --------------------------------------------------
+  
+  ls_OUT <- observation_survData(data)
+
+  # PRIORS
+  priors <- priors_survData(data, model_type = model_type)$priorsList
+    
+  ls_OUT_2 <- unlist(list(ls_OUT, priors), recursive = FALSE)
+    
+  return(ls_OUT_2)
+}
+
+# INTERNAL --------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+#
+#                                      OBSERVATION
+#
+#------------------------------------------------------------------------------
+
+observation_survData <- function(data){
   
   ls_OUT <- list()
   
@@ -26,14 +46,14 @@ modelDataStan <- function(data, model_type = NULL){
     dplyr::group_by(replicate) %>%
     dplyr::summarise(idC_lw = min(id_all),
                      idC_up = max(id_all))
-
+  
   ls_OUT$n_data_conc <- nrow(data_Conc)
   
   ls_OUT$conc <- data_Conc$conc
   ls_OUT$tconc <- data_Conc$time
   
   ls_OUT$replicate_conc <- data_Conc$replicate
-    
+  
   ls_OUT$idC_lw <- data_Conc_id$idC_lw
   ls_OUT$idC_up <- data_Conc_id$idC_up
   
@@ -61,17 +81,12 @@ modelDataStan <- function(data, model_type = NULL){
   
   ls_OUT$tNsurv <- data_Nsurv$time
   ls_OUT$replicate_Nsurv <- data_Nsurv$replicate
-    
+  
   ls_OUT$idS_lw <- data_Nsurv_id$idS_lw
   ls_OUT$idS_up <- data_Nsurv_id$idS_up
-
-  # PRIORS
-    
-  priors <- priors_survData(data, model_type = model_type)$priorsList
-    
-  ls_OUT_2 <- unlist(list(ls_OUT, priors), recursive = FALSE)
-    
-  return(ls_OUT_2)
+  
+  return(ls_OUT)
+  
 }
 
 
@@ -127,87 +142,120 @@ priors_survData <- function(x, model_type = NULL){
   priorsMinMax <- list(
     conc_min = conc_min,
     conc_max = conc_max,
-    
     kd_min = kd_min,
     kd_max = kd_max,
-    
     hb_min = hb_min,
-    hb_max = hb_max )
+    hb_max = hb_max,
+    kk_min = kk_min,
+    kk_max = kk_max,
+    z_min = conc_min,
+    z_max = conc_max,
+    alpha_min = conc_min,
+    alpha_max = conc_max,
+    beta_min = beta_minlog10,
+    beta_max = beta_maxlog10)
+  
+  elMinMax_general <- c("kd_min", "kd_max", "hb_min", "hb_max")
+  elMinMax_SD <- c(elMinMax_general, c("kk_min", "kk_max", "z_min", "z_max"))
+  elMinMaxt_IT <- c(elMinMax_general, c("alpha_min", "alpha_max", "beta_min", "beta_max"))
+  elMinMax_PROPER <- c(elMinMax_general, c("kk_min", "kk_max", "alpha_min", "alpha_max", "beta_min", "beta_max"))
+  
+  priorsMinMax <- switch(model_type,
+                         IT = priorsMinMax[elMinMaxt_IT],
+                         SD = priorsMinMax[elMinMax_SD],
+                         PROPER = priorsMinMax[elMinMax_PROPER])
   
   ##
   ## Construction of the list of priors
   ##
-  
   priorsList <-  list(
-    ##
     ## dominant rate constant: kd
-    ##
-    kd_meanlog10 = (log10(kd_max) + log10(kd_min)) / 2 ,
-    kd_sdlog10 = (log10(kd_max) - log10(kd_min)) / 4 ,
-    ##
+    kd_meanlog10 = .priorMean(kd_min, kd_max),
+    kd_sdlog10 = .priorSD(kd_min, kd_max),
     ## background hazard rate
-    ##
-    hb_meanlog10 = (log10(hb_max) + log10(hb_min)) / 2 ,
-    hb_sdlog10 = (log10(hb_max) - log10(hb_min)) / 4
+    hb_meanlog10 =  .priorMean(hb_min, hb_max),
+    hb_sdlog10 = .priorSD(hb_min, hb_max),
+    ## killing rate parameter: kk
+    kk_meanlog10 <- .priorMean(kk_min, kk_max),
+    kk_sdlog10 <- .priorSD(kk_min, kk_max),
+    ## non effect threshold: z
+    z_meanlog10 <- .priorMean(z_min, z_max),
+    z_sdlog10 <- .priorSD(z_min, z_max),
+    ## non effect threshold: scale parameter & median of a log-logistic distribution
+    alpha_meanlog10 <- .priorMean(alpha_min, alpha_max),
+    alpha_sdlog10 <- .priorSD(alpha_min, alpha_max),
+    ## shape parameter of a log-logistic distribution
+    beta_minlog10 <- beta_minlog10,
+    beta_maxlog10 <- beta_maxlog10
   )
   
-  if(model_type == "IT"){
-    
-    ## priorsMinMax
-    priorsMinMax$beta_min <- beta_minlog10
-    priorsMinMax$beta_max <- beta_maxlog10
-    
-    ## priorsList
-    ### non effect threshold: scale parameter & median of a log-logistic distribution
-    priorsList$alpha_meanlog10 <- (log10(conc_max) + log10(conc_min)) / 2
-    priorsList$alpha_sdlog10 <- (log10(conc_max) - log10(conc_min)) / 4
-    
-    ### shape parameter of a log-logistic distribution
-    priorsList$beta_minlog10 <- beta_minlog10
-    priorsList$beta_maxlog10 <- beta_maxlog10
-    
-  } else if (model_type == "SD"){
-    
-    ## priorsMinMax
-    priorsMinMax$kk_min <- kk_min
-    priorsMinMax$kk_max <- kk_max
-    
-    ## priorsList
-    ### killing rate parameter: kk
-    priorsList$kk_meanlog10 <- (log10(kk_max) + log10(kk_min)) / 2
-    priorsList$kk_sdlog10 <- (log10(kk_max) - log10(kk_min)) / 4
-    ### non effect threshold: z
-    priorsList$z_meanlog10 <- (log10(conc_max) + log10(conc_min)) / 2
-    priorsList$z_sdlog10 <- (log10(conc_max) - log10(conc_min)) / 4
-  } else if (model_type == "PROPER"){
-    
-    ## priorsMinMax
-    priorsMinMax$kk_min <- kk_min
-    priorsMinMax$kk_max <- kk_max
-    
-    ## priorsList
-    ### killing rate parameter: kk
-    priorsList$kk_meanlog10 <- (log10(kk_max) + log10(kk_min)) / 2
-    priorsList$kk_sdlog10 <- (log10(kk_max) - log10(kk_min)) / 4
-
-    ## priorsMinMax
-    priorsMinMax$beta_min <- beta_minlog10
-    priorsMinMax$beta_max <- beta_maxlog10
-    
-    ## priorsList
-    ### non effect threshold: scale parameter & median of a log-logistic distribution
-    priorsList$alpha_meanlog10 <- (log10(conc_max) + log10(conc_min)) / 2
-    priorsList$alpha_sdlog10 <- (log10(conc_max) - log10(conc_min)) / 4
-    
-    ### shape parameter of a log-logistic distribution
-    priorsList$beta_minlog10 <- beta_minlog10
-    priorsList$beta_maxlog10 <- beta_maxlog10
-    
-  } else stop("please, provide the 'model_type': 'SD', 'IT' or 'PROPER'.")
+  elList_general <- c("kd_meanlog10", "kd_sdlog10", "hb_meanlog10", "hb_sdlog10")
+  elList_SD <- c(elList_general, c("kk_meanlog10", "kk_sdlog10", "z_meanlog10", "z_sdlog10"))
+  elList_IT <- c(elList_general, c("alpha_meanlog10", "alpha_sdlog10", "beta_minlog10", "beta_maxlog10"))
+  elList_PROPER <- c(elList_general, c("kk_meanlog10", "kk_sdlog10", "alpha_meanlog10", "alpha_sdlog10", "beta_minlog10", "beta_maxlog10"))
   
+  
+  priorsList <- switch(model_type,
+    IT = priorsList[elList_IT],
+    SD = priorsList[elList_SD],
+    PROPER = priorsList[elList_PROPER]
+  )
   
   return(list(priorsList = priorsList,
               priorsMinMax = priorsMinMax))
+}
+
+
+# internal --------------------------------------------------------------------
+
+# Compute priors Mean and SD for lognormal distribution
+
+.priorMean <- function(x_min, x_max){
+  (log10(x_max) + log10(x_min)) / 2
+} 
+
+.priorSD <- function(x_min, x_max){
+  (log10(x_max) - log10(x_min)) / 4
+}
+
+# pool replicates with the same concentration
+#
+# @param x An object of class \code{survData}
+# @return A dataframe
+#
+
+pool_survData <- function(x){
+  
+  bool_checkTimeReplicate <- checkTimeReplicate(x)
+  
+  if( bool_checkTimeReplicate ){
+    ### Sum Nsurv data for each (conc, time) couple
+    x_dev <- x %>%
+      dplyr::group_by(conc, time) %>%
+      dplyr::summarise(Nsurv = sum(Nsurv)) %>%
+      # concate replicate in the same replicate using factor (conc)
+      dplyr::mutate(replicate = as.character(conc)) %>%
+      as.data.frame()
+  } else{
+    x_dev <- x
+  }
+  return(x_dev)
+}
+
+
+# Check the same number of (time, replicate) for a common concentration
+# 
+# @param x 
+
+checkTimeReplicate <- function(x){
+  df_checkTimeReplicate <- x %>%
+    dplyr::group_by(conc, time) %>%
+    dplyr::summarise(nbrReplicate_ConcTime = n_distinct(replicate)) %>%
+    dplyr::group_by(conc) %>%
+    dplyr::summarise(nbrReplicate_uniqueConc = length(unique(nbrReplicate_ConcTime)))
+  
+  return(all(df_checkTimeReplicate$nbrReplicate_uniqueConc == 1))
+  
 }
 
 
