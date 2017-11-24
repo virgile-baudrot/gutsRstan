@@ -46,6 +46,12 @@ posterior_predict <- function(x, ...){
 #' @param interpolate_method A method for interpolation to be used. See 
 #' function \code{\link[stats]{approxfun}}. Choices are "\code{linear}" or
 #'  "\code{constant}", default is "\code{linear}".
+#' @param posterior_type A method to define the conditional probability for
+#'  posterior estimation. Only required when \code{newdata = NULL}. Choices 
+#'  are \code{pointwise} and \code{timeserie}. For "\code{pointwise}", the
+#'  conditional probability is based on the observation
+#'  of the previous point, while for "\code{timeserie}" the conditional probability
+#'  is based on the simulation of the previous point. Default is \code{pointwise}.
 #' 
 #' @import deSolve
 #'    
@@ -53,38 +59,107 @@ posterior_predict <- function(x, ...){
 #' 
 #' 
 posterior_predict.stanTKTD <- function(x,
-                                       newdata = NULL,
+                                       newdata = NULL, #other stanTKTD
                                        draws = NULL,
                                        interpolate_length = 1e2,
-                                       interpolate_method = "linear"){
+                                       interpolate_method = "linear",
+                                       posterior_type = "timeserie"){
 
-    if(is.null(newdata)){
-      dataStan <-  x$dataStan
-      newdata <- data.frame(conc = dataStan$conc,
-                            time = dataStan$tconc,
-                            replicate = dataStan$replicate_conc)
+  if(is.null(newdata)){
+    if(posterior_type == "pointwise"){
+      mat_posterior_predict <- extract(x$stanfit, pars = 'Nsurv_ppc')$Nsurv_ppc
     }
+    if(posterior_type == "timeserie"){
+      mat_posterior_predict <- extract(x$stanfit, pars = 'Nsurv_sim')$Nsurv_sim
+    }
+    # mat_posterior_predict <- extract(x$stanfit, pars = 'Psurv_hat')
+  }
+  if(!is.null(newdata)){
+
+    # pSurv ----------------------------
+    posteriorPsurv_predict <- psurv_predict(x, newdata, draws, interpolate_length, interpolate_method)
   
-    newdata_list = split(newdata, newdata$replicate)
-    n_replicate <- length(unique(newdata$replicate))
+    toJoin_posterior_predict <- dplyr::select(posteriorPsurv_predict, -conc)
+    
+    # select Nsurv != NA
+    toJoin_newdata <-  newdata %>%
+      dplyr::select(replicate, time, Nsurv) %>%
+      dplyr::mutate(replicate = as.character(replicate)) %>%
+      dplyr::filter(!is.na(Nsurv))
+    
+    join_predict <- dplyr::inner_join(toJoin_posterior_predict, toJoin_newdata, by=c("replicate", "time"))
+     
+    # Nsurv ---------------------------
+    
+    select_join_predict <- dplyr::select(join_predict, -c(time, Nsurv, replicate))
+                  
+    mat_posterior_predict <- matrix(ncol = ncol(select_join_predict), nrow = nrow(select_join_predict))
   
-    pp_list_solveTKTD <- lapply(1:n_replicate,
-                                function(it) {
-                                  solveTKTD(x,
-                                            newdata_list[[it]],
-                                            draws = draws,
-                                            interpolate_length = interpolate_length,
-                                            interpolate_method = interpolate_method)
-                                })
+    for(i in 1:nrow(join_predict)){
+      if(join_predict$time[i] == 0){
+        mat_posterior_predict[i, ] <- rep(join_predict$Nsurv[i], ncol(mat_posterior_predict))
+      } else{
+        if(posterior_type == "pointwise"){
+          mat_posterior_predict[i, ] <- rbinom( n = ncol(mat_posterior_predict),
+                                                size = join_predict$Nsurv[i-1],
+                                                prob = as.numeric(select_join_predict[i, ]/select_join_predict[i-1, ]))
+        }
+        if(posterior_type == "timeserie"){
+          mat_posterior_predict[i, ] <- rbinom( n = ncol(mat_posterior_predict),
+                                                size = mat_posterior_predict[i-1, ],
+                                                prob = as.numeric(select_join_predict[i, ]/select_join_predict[i-1, ]))
+        }
+      } 
+    }
     
-    names(pp_list_solveTKTD) <- unique(newdata$replicate)
+    mat_posterior_predict <- t(mat_posterior_predict)
+  }
     
-    structure(pp_list_solveTKTD, class = c("ppd", class(pp_list_solveTKTD)))
-    
-    return(pp_list_solveTKTD)
+  return(mat_posterior_predict)
 }
 
 # internal --------------------------------------------------------------------
+
+psurv_predict <- function(x,
+                          newdata = NULL,
+                          draws = NULL,
+                          interpolate_length = 1e2,
+                          interpolate_method = "linear"){
+  
+  if(is.null(newdata)){
+    newdata <- x$data
+  }
+
+  filter_newdata <- newdata %>%
+      dplyr::filter(!is.na(conc))
+    
+  filter_newdata_list <- split(filter_newdata, filter_newdata$replicate)
+    
+  newdata_list <- split(newdata, newdata$replicate)
+
+  if(length(newdata_list) != length(filter_newdata_list)){
+    stop("A replicate has all 'conc' with 'NA'")
+  }
+  
+  n_replicate <- length(newdata_list)
+  
+  pp_list_solveTKTD <- lapply(1:n_replicate,
+                              function(it) {
+                                solveTKTD(x,
+                                          time_conc = filter_newdata_list[[it]]$time,
+                                          conc = filter_newdata_list[[it]]$conc,
+                                          draws = draws,
+                                          interpolate_time = newdata_list[[it]]$time,
+                                          interpolate_length = interpolate_length,
+                                          interpolate_method = interpolate_method)
+                              })
+
+  names(pp_list_solveTKTD) <- names(newdata_list)
+  
+  out_posterior_predict <- dplyr::bind_rows(pp_list_solveTKTD, .id = "replicate")
+
+  return(out_posterior_predict)
+}
 
 # SD model solver
 
@@ -123,37 +198,36 @@ model_IT <- function(t, State, parms, input) {
 
 # solver TKTD with deSolve
 solveTKTD <- function(x,
-                      newdata = NULL,
+                      time_conc = NULL,
+                      conc = NULL,
                       draws = NULL,
-                      interpolate_length = 1e3,
+                      interpolate_time = NULL,
+                      interpolate_length = 1e2,
                       interpolate_method = "linear"){
   
   MCMC_stanEstim <- extract_MCMCparameters(x)
   
   if(is.null(draws)){
     draws <- nrow(MCMC_stanEstim)
-  }
+  } 
   
   ## external signal with several rectangle impulses
-  signal <- data.frame(times = newdata$time, 
-                       import = newdata$conc)
+  sigimp <- approxfun(time_conc, conc, method = interpolate_method, rule = 2)
   
-  sigimp <- approxfun(signal$times, signal$import, method = interpolate_method, rule = 2)
-  
-  if(!is.null(interpolate_length)){
-    times = seq(min(newdata$time),max(newdata$time), length = interpolate_length)
+  if(is.null(interpolate_time)){
+    times <- seq(min(time_conc), max(time_conc), length.out = interpolate_length)
   } else{
-    times = signal$times
+    times <-  sort(unique(c(seq(min(interpolate_time), max(interpolate_time), length.out = interpolate_length), interpolate_time)))
   }
   
   ## model
-  kd = 10^MCMC_stanEstim$kd_log10
-  hb = 10^MCMC_stanEstim$hb_log10
+  kd <- 10^MCMC_stanEstim$kd_log10
+  hb <- 10^MCMC_stanEstim$hb_log10
     
   if(x$model_type == "IT"){
 
-      alpha = 10^MCMC_stanEstim$alpha_log10
-      beta = 10^MCMC_stanEstim$beta_log10
+    alpha <- 10^MCMC_stanEstim$alpha_log10
+    beta <- 10^MCMC_stanEstim$beta_log10
     
     ## The parameters
     parms  <- list( kd = kd,
@@ -174,8 +248,8 @@ solveTKTD <- function(x,
   }
   if (x$model_type == "SD"){
 
-      kk = 10^MCMC_stanEstim$kk_log10
-      z = 10^MCMC_stanEstim$z_log10
+    kk = 10^MCMC_stanEstim$kk_log10
+    z = 10^MCMC_stanEstim$z_log10
     
     ## The parameters
     parms  <- list( kd = kd,
@@ -198,37 +272,26 @@ solveTKTD <- function(x,
   
   if(x$model_type == "IT"){
     D_matrix = as.data.frame(out) %>%
-      dplyr::select(-c(time,signal))%>%
+      dplyr::select(-c(time, signal))%>%
       as.matrix()
-    S <- 1-plogis(log(t(D_matrix)), location = log(parms$alpha), scale = 1/parms$beta)
+    S <- exp( - hb %*% t(times)) * ( 1-plogis(log(t(D_matrix)), location = log(parms$alpha), scale = 1/parms$beta))
     dtheo <- t(S)
-    
+
   }
   if(x$model_type=="SD"){
     
     H_matrix = as.data.frame(out) %>%
-      dplyr::select(contains("H"),-c(time,signal))%>%
+      dplyr::select(contains("H"),-c(time, signal))%>%
       as.matrix()
     S <- exp(-H_matrix)
     dtheo <- S
   }
 
-  # -------- df.theo
-  # df <- data_frame(time = out[, "time"],
-  #                 conc = out[, "signal"],
-  #                 replicate = rep(unique(newdata$replicate), length(out[, "time"])),
-  #                 q50 = apply(dtheo, 1, quantile, probs = 0.5, na.rm = TRUE),
-  #                 qinf95 = apply(dtheo, 1, quantile, probs = 0.025, na.rm = TRUE),
-  #                 qsup95 = apply(dtheo, 1, quantile, probs = 0.975, na.rm = TRUE))
-  ## RETURN
-  
-  pp_solveTKTD <- as.data.frame(dtheo) %>%
-    mutate(time = out[, "time"],
-           conc = out[, "signal"],
-           replicate = rep(unique(newdata$replicate), length(out[, "time"])),
-           q50 = apply(dtheo, 1, quantile, probs = 0.5, na.rm = TRUE),
-           qinf95 = apply(dtheo, 1, quantile, probs = 0.025, na.rm = TRUE),
-           qsup95 = apply(dtheo, 1, quantile, probs = 0.975, na.rm = TRUE))
+  # OUTPUT --------------------------------------------------------------------
+
+  pp_solveTKTD <- as_data_frame(dtheo) %>%
+    mutate(time = out[, "time"], 
+           conc = out[, "signal"])
   
   return(pp_solveTKTD)
 }
@@ -237,7 +300,6 @@ solveTKTD <- function(x,
 
 #' #' Run odes with the stan integrator
 #' #'
-#' #' @export
 #' #' 
 #' #' 
 #' run_odes <- function(x, newdata){
