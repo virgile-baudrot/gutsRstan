@@ -23,9 +23,8 @@ posterior_predict <- function(x, ...){
 #' manipulation of a predictor affects (a function of) the outcome(s). With new
 #' observations of predictor variables we can use the posterior predictive
 #' distribution to generate predicted outcomes.
-#' #'
+#' 
 #' @aliases posterior_predict
-#' @export
 #' 
 #' @param x An object of class \code{stanTKTD}
 #' @param newdata Optionally, a data frame in which to look for variables with
@@ -52,8 +51,26 @@ posterior_predict <- function(x, ...){
 #'  conditional probability is based on the observation
 #'  of the previous point, while for "\code{timeserie}" the conditional probability
 #'  is based on the simulation of the previous point. Default is \code{pointwise}.
+#' @param mc.cores The number of cores to use, i.e. at most how many child
+#' processes will be run simultaneously.  The option is initialized from 
+#' environment variable ‘MC_CORES’ if set. Must be at least one, and 
+#' parallelization requires at least two cores. Default is 1. It is not 
+#' available on Windows unless ‘mc.cores = 1’.
+#' @param integrator_method The integrator to use. See 
+#' function \code{\link[deSolve]{ode}}. Either a function that
+#' performs integration, or a list of class rkMethod, or a string ("lsoda",
+#' "lsode", "lsodes","lsodar","vode", "daspk", "euler", "rk4", "ode23", 
+#' "ode45", "radau", "bdf", "bdf_d", "adams", "impAdams" or "impAdams_d" ,
+#' "iteration"). Options "bdf", "bdf_d", "adams", "impAdams" or "impAdams_d"
+#' are the backward differentiation formula, the BDF with diagonal representation
+#' of the Jacobian, the (explicit) Adams and the implicit Adams method, and the
+#' implicit Adams method with diagonal representation of the Jacobian
+#'  respectively (see details). The default integrator used is \code{lsoda}.
 #' 
+#'   
 #' @import deSolve
+#' @import parallel
+#' @import matrixStats
 #'    
 #' @export
 #' 
@@ -63,7 +80,9 @@ posterior_predict.stanTKTD <- function(x,
                                        draws = NULL,
                                        interpolate_length = 1e2,
                                        interpolate_method = "linear",
-                                       posterior_type = "timeserie"){
+                                       posterior_type = "pointwise",
+                                       mc.cores = 1,
+                                       integrator_method = "lsoda"){
 
   if(is.null(newdata)){
     if(posterior_type == "pointwise"){
@@ -77,15 +96,16 @@ posterior_predict.stanTKTD <- function(x,
   if(!is.null(newdata)){
 
     # pSurv ----------------------------
-    posteriorPsurv_predict <- psurv_predict(x, newdata, draws, interpolate_length, interpolate_method)
+    posteriorPsurv_predict <- psurv_predict(x, newdata, draws, interpolate_length, interpolate_method, mc.cores)
   
     toJoin_posterior_predict <- dplyr::select(posteriorPsurv_predict, -conc)
     
     # select Nsurv != NA
-    toJoin_newdata <-  newdata %>%
-      dplyr::select(replicate, time, Nsurv) %>%
-      dplyr::mutate(replicate = as.character(replicate)) %>%
-      dplyr::filter(!is.na(Nsurv))
+      toJoin_newdata <-  newdata %>%
+        dplyr::select(replicate, time, Nsurv) %>%
+        dplyr::mutate(replicate = as.character(replicate)) %>%
+        dplyr::filter(!is.na(Nsurv))
+    
     
     join_predict <- dplyr::inner_join(toJoin_posterior_predict, toJoin_newdata, by=c("replicate", "time"))
      
@@ -93,13 +113,20 @@ posterior_predict.stanTKTD <- function(x,
     
     select_join_predict <- dplyr::select(join_predict, -c(time, Nsurv, replicate))
                   
-    mat_posterior_predict <- matrix(ncol = ncol(select_join_predict), nrow = nrow(select_join_predict))
+    mat_posterior_predict <- matrix(NA, ncol = ncol(select_join_predict), nrow = nrow(select_join_predict))
+    mat_prob <- matrix(NA, ncol = ncol(select_join_predict), nrow = nrow(select_join_predict))
   
     for(i in 1:nrow(join_predict)){
       if(join_predict$time[i] == 0){
+        
+        mat_prob[i, ] = rep(1, ncol(mat_posterior_predict))
+        
         mat_posterior_predict[i, ] <- rep(join_predict$Nsurv[i], ncol(mat_posterior_predict))
       } else{
         if(posterior_type == "pointwise"){
+          
+          mat_prob[i, ] = as.numeric(select_join_predict[i, ]/select_join_predict[i-1, ])
+          
           mat_posterior_predict[i, ] <- rbinom( n = ncol(mat_posterior_predict),
                                                 size = join_predict$Nsurv[i-1],
                                                 prob = as.numeric(select_join_predict[i, ]/select_join_predict[i-1, ]))
@@ -124,7 +151,8 @@ psurv_predict <- function(x,
                           newdata = NULL,
                           draws = NULL,
                           interpolate_length = 1e2,
-                          interpolate_method = "linear"){
+                          interpolate_method = "linear",
+                          mc.cores = 1){
   
   if(is.null(newdata)){
     newdata <- x$data
@@ -141,18 +169,30 @@ psurv_predict <- function(x,
     stop("A replicate has all 'conc' with 'NA'")
   }
   
+  if(mc.cores == 1){
+    cat('progress:', 0, '% \n')
+  } else{
+    cat('For information: No progress indicator is available when mc.cores > 1.')
+  }
+  
   n_replicate <- length(newdata_list)
   
-  pp_list_solveTKTD <- lapply(1:n_replicate,
-                              function(it) {
-                                solveTKTD(x,
-                                          time_conc = filter_newdata_list[[it]]$time,
-                                          conc = filter_newdata_list[[it]]$conc,
-                                          draws = draws,
-                                          interpolate_time = newdata_list[[it]]$time,
-                                          interpolate_length = interpolate_length,
-                                          interpolate_method = interpolate_method)
-                              })
+  pp_list_solveTKTD <- parallel::mclapply(1:n_replicate,
+                                function(it) {
+                                  ode_TKTD = solveTKTD(x,
+                                            time_conc = filter_newdata_list[[it]]$time,
+                                            conc = filter_newdata_list[[it]]$conc,
+                                            draws = draws,
+                                            interpolate_time = newdata_list[[it]]$time,
+                                            interpolate_length = interpolate_length,
+                                            interpolate_method = interpolate_method)
+                                  ## progress
+                                  percent_draws = it/n_replicate * 100
+                                  cat('progress:', percent_draws, '% \n')
+                                  ##
+                                  return(ode_TKTD)                      
+                                },
+                                mc.cores = mc.cores)
 
   names(pp_list_solveTKTD) <- names(newdata_list)
   
@@ -209,7 +249,11 @@ solveTKTD <- function(x,
   
   if(is.null(draws)){
     draws <- nrow(MCMC_stanEstim)
-  } 
+  } else{
+    if(draws > nrow(MCMC_stanEstim)) { stop('draws > size of MCMC.')}
+    seq_MCMC <- round(seq(from = 1, to = nrow(MCMC_stanEstim), length.out = draws)) # with draws < size MCMC, elements of seq_MCMC are unique ! 
+    MCMC_stanEstim <- MCMC_stanEstim[ seq_MCMC , ]
+  }
   
   ## external signal with several rectangle impulses
   sigimp <- approxfun(time_conc, conc, method = interpolate_method, rule = 2)
@@ -273,8 +317,13 @@ solveTKTD <- function(x,
   if(x$model_type == "IT"){
     D_matrix = as.data.frame(out) %>%
       dplyr::select(-c(time, signal))%>%
-      as.matrix()
-    S <- exp( - hb %*% t(times)) * ( 1-plogis(log(t(D_matrix)), location = log(parms$alpha), scale = 1/parms$beta))
+      as.matrix() %>%
+      matrixStats::colCummaxs()
+    #S <- exp( - hb %*% t(times)) * ( 1-plogis(log(t(D_matrix)), location = log(parms$alpha), scale = 1/parms$beta))
+    #S <- exp( - hb %*% t(times)) * ( 1-1 / (1+ (t(D_matrix)/parms$alpha)^(-parms$beta)))
+    #S <- exp( - hb %*% t(times)) * ( 1-1 / (1+ exp((t(D_matrix) - parms$alpha)/(parms$beta))))
+    #S <- exp( - hb %*% t(times)) * ( 1- t(D_matrix)^(parms$beta) / ( (parms$alpha)^(parms$beta) + t(D_matrix)^(parms$beta) ))
+    S <- exp( - hb %*% t(times)) * ( 1 - 1 / (1+ exp( -parms$beta * (log(t(D_matrix)) - log(parms$alpha) )))) 
     dtheo <- t(S)
 
   }
@@ -295,7 +344,6 @@ solveTKTD <- function(x,
   
   return(pp_solveTKTD)
 }
-
 
 
 #' #' Run odes with the stan integrator
