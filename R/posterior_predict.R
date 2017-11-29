@@ -106,8 +106,7 @@ posterior_predict.stanTKTD <- function(x,
         dplyr::mutate(replicate = as.character(replicate)) %>%
         dplyr::filter(!is.na(Nsurv))
     
-    
-    join_predict <- dplyr::inner_join(toJoin_posterior_predict, toJoin_newdata, by=c("replicate", "time"))
+    join_predict <- dplyr::inner_join(x = toJoin_posterior_predict, y = toJoin_newdata, by = c('replicate','time'))
      
     # Nsurv ---------------------------
     
@@ -172,7 +171,7 @@ psurv_predict <- function(x,
   if(mc.cores == 1){
     cat('progress:', 0, '% \n')
   } else{
-    cat('For information: No progress indicator is available when mc.cores > 1.')
+    cat('For information: No progress indicator is available when mc.cores > 1. \n')
   }
   
   n_replicate <- length(newdata_list)
