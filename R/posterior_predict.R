@@ -70,7 +70,7 @@ posterior_predict <- function(x, ...){
 #'   
 #' @import deSolve
 #' @import parallel
-#' @import matrixStats
+#' @importFrom matrixStats colCummaxs
 #'    
 #' @export
 #' 
