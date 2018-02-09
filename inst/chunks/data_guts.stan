@@ -24,3 +24,8 @@ real hb_meanlog10;
 real hb_sdlog10;
 real kd_meanlog10;
 real kd_sdlog10;
+
+// Parameters for integration of differentiol equations
+real rel_tol;
+real abs_tol;
+real max_num_steps;
