@@ -17,7 +17,7 @@ modelDataStan <- function(data, model_type = NULL, ode_control = NULL){
   # PRIORS
   priors <- priors_survData(data, model_type = model_type)$priorsList
     
-  ls_OUT_2 <- unlist(list(ls_OUT, priors), recursive = FALSE)
+  ls_OUT_2 <- unlist(list(ls_OUT, priors, ode_control), recursive = FALSE)
     
   return(ls_OUT_2)
 }
@@ -179,11 +179,11 @@ priors_survData <- function(x, model_type = NULL){
     kk_meanlog10 = .priorMean(kk_min, kk_max),
     kk_sdlog10 = .priorSD(kk_min, kk_max),
     ## non effect threshold: z
-    z_meanlog10 = .priorMean(z_min, z_max),
-    z_sdlog10 = .priorSD(z_min, z_max),
+    z_meanlog10 = .priorMean(conc_min, conc_max),
+    z_sdlog10 = .priorSD(conc_min, conc_max),
     ## non effect threshold: scale parameter & median of a log-logistic distribution
-    alpha_meanlog10 = .priorMean(alpha_min, alpha_max),
-    alpha_sdlog10 = .priorSD(alpha_min, alpha_max),
+    alpha_meanlog10 = .priorMean(conc_min, conc_max),
+    alpha_sdlog10 = .priorSD(conc_min, conc_max),
     ## shape parameter of a log-logistic distribution
     beta_minlog10 = beta_minlog10,
     beta_maxlog10 = beta_maxlog10
