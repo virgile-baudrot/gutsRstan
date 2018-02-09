@@ -1,16 +1,11 @@
 functions {
-  /* bisectioning search of the index i such that sorted[i] < x < sorted[i+1]
-  this come from Sebastian Weber
-  */
-    
-    // #include "common_functions.stan"
-    
-    /* for multiple .stan files */
+  
+  /* for multiple .stan files */
     
     /* bisectioning search of the index i such that sorted[i] < x < sorted[i+1]
-  this come from Sebastian Weber
+  this come from Sebastian Weber 
   */
-    int find_interval_elem(real x, vector sorted, int start_ind) {
+    int find_interval_elem(real x, vector sorted, int start_ind){
       int res;
       int N;
       int max_iter;
@@ -47,14 +42,10 @@ functions {
           if (right * mid < 0) { left  = mid; left_ind  = mid_ind; }
           iter = iter + 1;
       }
-      if(iter == max_iter)
-        print("Maximum number of iterations reached.");
+      if(iter == max_iter) print("Maximum number of iterations reached.");
       return(left_ind);
     }
-  
-  
   /*    Function for linear interpolation*/
-    
     real linearInterp( real t_x, real t_before, real t_after, real y_before, real y_after){
       real linInterp_hat;
       
@@ -63,28 +54,23 @@ functions {
       return(linInterp_hat);
     }
   
-  real loglogistic_lpdf(real y, real a, real b) {
-    
-    return log(b) - log(a) + (b - 1) * (log(y) - log(a)) - 2 * log1p_exp(b * (log(y) - log(a)));
-    
-  } 
   
-  real[] TKTD_varIT2( real t,
-                         real[] y,
-                         real[] theta,
-                         real[] x_r,
-                         int[]  x_i) {
+  real[] TKTD_varIT( real t,
+                     real[] y,
+                     real[] theta,
+                     real[] x_r,
+                     int[]  x_i) {
     
     // - parameters
     real hb = theta[1];
     real kd = theta[2];
-    real z = theta[3];
+    real alpha = theta[3];
+    real beta = theta[4];
     
     // - new variables
-    real max_z[2]; // 
     real dy_dt[2]; //
       
-    // - latent variables
+      // - latent variables
     int Nconc = x_i[1]; // Number of point measuring concentration
     
     vector[Nconc] tconc = to_vector(x_r[1:Nconc]);
@@ -99,114 +85,134 @@ functions {
     // - model
     dy_dt[1] =  kd * ( conc_linInterp - y[1]);
     
-    max_z[1] = 0;
-    max_z[2] = y[1] - z;
-    
-    dy_dt[2] = 1e99*max(max_z) + hb;
+    dy_dt[2] = ( (-beta*(y[1] / alpha)^(beta-1)) / (alpha * (1+ (y[1]/alpha)^(beta))^2) ) * (exp(-hb*t) * dy_dt[1]) - (hb * exp(-hb*t))/(1+(y[1]/alpha)^beta)   ;
     
     return(dy_dt);
   }
   
-  matrix solve_TKTD_varIT2(real[] y0, real t0, real[] ts, real[] theta, real[] tconc, real[] conc){
+  matrix solve_TKTD_varIT2(real[] y0, real t0, real[] ts, real[] theta, real[] tconc, real[] conc, real[] odeParam){
     
     int x_i[1];
     x_i[1] = size(tconc);
-    
+   
+    // return(to_matrix(
+    //   integrate_ode_rk45(TKTD_varIT, y0, t0, ts, theta,
+    //                      to_array_1d(append_row(to_vector(tconc), to_vector(conc))),
+    //                      x_i,
+    //                      // additional control parameters for the solver: real rel_tol, real abs_tol, int max_num_steps
+    //                      odeParam[1], odeParam[2], odeParam[3])));
+
     return(to_matrix(
-      integrate_ode_rk45(TKTD_varIT2, y0, t0, ts, theta, 
+      integrate_ode_bdf(TKTD_varIT, y0, t0, ts, theta,
                          to_array_1d(append_row(to_vector(tconc), to_vector(conc))),
                          x_i,
                          // additional control parameters for the solver: real rel_tol, real abs_tol, int max_num_steps
-                         10e-10, 10e-8, 1e6)));
+                       odeParam[1], odeParam[2], odeParam[3])));
+
   }
 }
 
 data {
+  // Number of groups
+int<lower=1> n_group; 
   
-  int<lower=1> n_group; // number of groups
   
-  /* Concentration */
-    int<lower=1> n_data_conc; // length of data for concentration
-    real conc[n_data_conc]; // concentration
-    real tconc[n_data_conc]; // time of concentration
-    
-    int<lower=1> idC_lw[n_group]; // e.g. 1 6 12 18
-    int<lower=1> idC_up[n_group]; // e.g. 6 12 18 24
-    
-    /* Survivors */
-    int<lower=1> n_data_Nsurv; // number of group: 4
-    int Nsurv[n_data_Nsurv];
-    int Nprec[n_data_Nsurv];
-    
-    real tNsurv[n_data_Nsurv]; // time of concentration
-    
-    int<lower=1> idS_lw[n_group]; // e.g. 1 6 12 18
-    int<lower=1> idS_up[n_group]; // e.g. 6 12 18 24
-    
-    /* PRIORS */
-    real kd_meanlog10;
-    real kd_sdlog10;
-    real hb_meanlog10;
-    real hb_sdlog10;
-    
-    real alpha_meanlog10;
-    real alpha_sdlog10;
-    real beta_minlog10;
-    real beta_maxlog10;
+  // Concentration
+  int<lower=1> n_data_conc; // length of data for concentration
+  real conc[n_data_conc]; // concentration
+  real tconc[n_data_conc]; // time of concentration
+  
+  int<lower=1> idC_lw[n_group]; // e.g. 1 6 12 18
+  int<lower=1> idC_up[n_group]; // e.g. 6 12 18 24
+  
+  // Survivors
+  int<lower=1> n_data_Nsurv; // number of group: 4
+  int Nsurv[n_data_Nsurv];
+  int Nprec[n_data_Nsurv];
+  
+  real tNsurv[n_data_Nsurv]; // time of concentration
+  
+  int<lower=1> idS_lw[n_group]; // e.g. 1 6 12 18
+  int<lower=1> idS_up[n_group]; // e.g. 6 12 18 24
+  
+  // PRIORS
+  real hb_meanlog10;
+  real hb_sdlog10;
+  real kd_meanlog10;
+  real kd_sdlog10;
+  
+  // Parameters for integration of differentiol equations
+  real rel_tol;
+  real abs_tol;
+  real max_num_steps;
+  
+  
+  /* PRIORS */
+  real alpha_meanlog10;
+  real alpha_sdlog10;
+  real beta_minlog10;
+  real beta_maxlog10;
 }
 transformed data{
-
+  
   real<lower=0> y0[2];
-
+  real odeParam[3];
+  
   y0[1] = 0;
-  y0[2] = 0;
+  y0[2] = 1; // refers to Survival Rate
+  
+  // Add odeSolveParameters
+  odeParam[1] = rel_tol;
+  odeParam[2] = abs_tol;
+  odeParam[3] = max_num_steps;
   
 }
 parameters {
-
-  real kd_log10;
   real hb_log10;
+  real kd_log10;
   real alpha_log10;
   real beta_log10;
   
-  real z; // create parameter z
+  //real<lower=0> y0[2];
   
 }
 transformed parameters{
   
-  real<lower=0> param[3]; //
+  real<lower=0> param[4]; //
     
-  matrix[n_data_Nsurv, 2] y_hat;
-  vector<lower=0, upper=1>[n_data_Nsurv] Psurv_hat;
+    matrix[n_data_Nsurv,2] y_hat;
+  vector[n_data_Nsurv] Psurv_hat;
+  vector[n_data_Nsurv] Conditional_Psurv_hat_noPos;
   vector<lower=0, upper=1>[n_data_Nsurv] Conditional_Psurv_hat;
   
   param[1] = 10^hb_log10; // hb
   param[2] = 10^kd_log10; // kd
-  param[3] = z;
+  param[3] = 10^alpha_log10; // alpha
+  param[4] = 10^beta_log10; // beta
   
   for(gr in 1:n_group){
-    /* initial time must be less than t0 = 0, so we use a very small close small number -1e-8 */
-      y_hat[idS_lw[gr]:idS_up[gr],1:2] = solve_TKTD_varIT2(y0, -1e-9, tNsurv[idS_lw[gr]:idS_up[gr]], param, tconc[idC_lw[gr]:idC_up[gr]], conc[idC_lw[gr]:idC_up[gr]]);
+    /* initial time must be less than t0 = 0, so we use a very small close small number -1e-9 */
+      y_hat[idS_lw[gr]:idS_up[gr],1:2] = solve_TKTD_varIT2(y0, -1e-9, tNsurv[idS_lw[gr]:idS_up[gr]], param, tconc[idC_lw[gr]:idC_up[gr]], conc[idC_lw[gr]:idC_up[gr]], odeParam);
       
-      Psurv_hat[idS_lw[gr]:idS_up[gr]] = exp( - y_hat[idS_lw[gr]:idS_up[gr], 2]);
+      Psurv_hat[idS_lw[gr]:idS_up[gr]] = y_hat[idS_lw[gr]:idS_up[gr], 2];
       
       for(i in idS_lw[gr]:idS_up[gr]){
         
-        Conditional_Psurv_hat[i] =  i == idS_lw[gr] ? Psurv_hat[i] : Psurv_hat[i] / Psurv_hat[i-1] ;
+        Conditional_Psurv_hat_noPos[i] =  i == idS_lw[gr] ? Psurv_hat[i] : Psurv_hat[i] / Psurv_hat[i-1] ;
+        // Ensure positivity of Conditional probability
+        Conditional_Psurv_hat[i] = Conditional_Psurv_hat_noPos[i] < 0 ? 0 : Conditional_Psurv_hat_noPos[i] ;
         
       }
   }
-  
 }
 model {
   
-  kd_log10 ~ normal( kd_meanlog10, kd_sdlog10 );
   hb_log10 ~ normal( hb_meanlog10, hb_sdlog10 );
-  alpha_log10  ~ normal( alpha_meanlog10,   alpha_sdlog10 );
-  beta_log10 ~ uniform( beta_minlog10 , beta_maxlog10 );
-
-  z ~  loglogistic(10^alpha_log10, 10^beta_log10); // for log-logistic
-  //z ~ lognormal(10^mu_log10, 10^sigma_log10); // for lognormal law with parameter mu and sigma
+  kd_log10 ~ normal( kd_meanlog10, kd_sdlog10 );
+  alpha_log10  ~ normal( alpha_meanlog10, alpha_sdlog10 );
+  beta_log10 ~ uniform( beta_minlog10, beta_maxlog10 );
+  
+  // y0 ~ exponential(1e9);
   
   for(gr in 1:n_group){
     
@@ -215,12 +221,11 @@ model {
   }
 }
 generated quantities {
+  
   int Nsurv_ppc[n_data_Nsurv];
   int Nsurv_sim[n_data_Nsurv];
   int Nsurv_sim_prec[n_data_Nsurv];
-  
   for(gr in 1:n_group){
-    
     /* binomial_rng function cannot be vectorized, so we need to use a loop*/
       for(i in idS_lw[gr]:idS_up[gr]){
         Nsurv_ppc[i] = binomial_rng(Nprec[i], Conditional_Psurv_hat[i]);
@@ -230,6 +235,7 @@ generated quantities {
         Nsurv_sim[i] = binomial_rng(Nsurv_sim_prec[i], Conditional_Psurv_hat[i]);
       }
   }
+  
   
 }
 
