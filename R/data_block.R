@@ -176,17 +176,17 @@ priors_survData <- function(x, model_type = NULL){
     hb_meanlog10 =  .priorMean(hb_min, hb_max),
     hb_sdlog10 = .priorSD(hb_min, hb_max),
     ## killing rate parameter: kk
-    kk_meanlog10 <- .priorMean(kk_min, kk_max),
-    kk_sdlog10 <- .priorSD(kk_min, kk_max),
+    kk_meanlog10 = .priorMean(kk_min, kk_max),
+    kk_sdlog10 = .priorSD(kk_min, kk_max),
     ## non effect threshold: z
-    z_meanlog10 <- .priorMean(z_min, z_max),
-    z_sdlog10 <- .priorSD(z_min, z_max),
+    z_meanlog10 = .priorMean(z_min, z_max),
+    z_sdlog10 = .priorSD(z_min, z_max),
     ## non effect threshold: scale parameter & median of a log-logistic distribution
-    alpha_meanlog10 <- .priorMean(alpha_min, alpha_max),
-    alpha_sdlog10 <- .priorSD(alpha_min, alpha_max),
+    alpha_meanlog10 = .priorMean(alpha_min, alpha_max),
+    alpha_sdlog10 = .priorSD(alpha_min, alpha_max),
     ## shape parameter of a log-logistic distribution
-    beta_minlog10 <- beta_minlog10,
-    beta_maxlog10 <- beta_maxlog10
+    beta_minlog10 = beta_minlog10,
+    beta_maxlog10 = beta_maxlog10
   )
   
   elList_general <- c("kd_meanlog10", "kd_sdlog10", "hb_meanlog10", "hb_sdlog10")
