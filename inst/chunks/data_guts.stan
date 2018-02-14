@@ -13,8 +13,7 @@ int<lower=1> idC_up[n_group]; // e.g. 6 12 18 24
 int<lower=1> n_data_Nsurv; // number of group: 4
 int Nsurv[n_data_Nsurv];
 int Nprec[n_data_Nsurv];
-
-real tNsurv[n_data_Nsurv]; // time of concentration
+real tNsurv[n_data_Nsurv]; // time of Nbr survival
 
 int<lower=1> idS_lw[n_group]; // e.g. 1 6 12 18
 int<lower=1> idS_up[n_group]; // e.g. 6 12 18 24
@@ -28,4 +27,4 @@ real kd_sdlog10;
 // Parameters for integration of differentiol equations
 real rel_tol;
 real abs_tol;
-real max_num_steps;
+int max_num_steps;

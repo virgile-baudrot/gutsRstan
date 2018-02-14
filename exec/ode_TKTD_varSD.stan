@@ -73,6 +73,9 @@ transformed data{
   real<lower=0> y0[2];
   real odeParam[3];
 
+  real tNsurv_ode[n_data_Nsurv]; // time of Nbr survival to include in the ode !
+  real tconc_ode[n_data_conc]; // time of Nbr survival to include in the ode !
+
   y0[1] = 0;
   y0[2] = 0;
 
@@ -80,6 +83,14 @@ transformed data{
   odeParam[1] = rel_tol;
   odeParam[2] = abs_tol;
   odeParam[3] = max_num_steps;
+  
+  for(gr in 1:n_group){
+    tNsurv_ode[idS_lw[gr]:idS_up[gr]] = tNsurv[idS_lw[gr]:idS_up[gr]];
+    tNsurv_ode[idS_lw[gr]] = tNsurv[idS_lw[gr]] + 1e-9 ; // to start ode integrator at 0
+    tconc_ode[idC_lw[gr]:idC_up[gr]] = tconc[idC_lw[gr]:idC_up[gr]];
+    tconc_ode[idC_lw[gr]] = tconc[idC_lw[gr]] + 1e-9 ; // to start ode integrator at 0
+  }
+  
   
 }
 parameters {
@@ -105,8 +116,9 @@ transformed parameters{
   
   for(gr in 1:n_group){
   /* initial time must be less than t0 = 0, so we use a very small close small number -1e-9 */
-   y_hat[idS_lw[gr]:idS_up[gr],1:2] = solve_TKTD_varSD(y0, -1e-9, tNsurv[idS_lw[gr]:idS_up[gr]], param, tconc[idC_lw[gr]:idC_up[gr]], conc[idC_lw[gr]:idC_up[gr]], odeParam);
-    
+   // y_hat[idS_lw[gr]:idS_up[gr],1:2] = solve_TKTD_varSD(y0, -1e-9, tNsurv[idS_lw[gr]:idS_up[gr]], param, tconc[idC_lw[gr]:idC_up[gr]], conc[idC_lw[gr]:idC_up[gr]], odeParam);
+    y_hat[idS_lw[gr]:idS_up[gr],1:2] = solve_TKTD_varSD(y0, 0, tNsurv_ode[idS_lw[gr]:idS_up[gr]], param, tconc_ode[idC_lw[gr]:idC_up[gr]], conc[idC_lw[gr]:idC_up[gr]], odeParam);
+
     Psurv_hat[idS_lw[gr]:idS_up[gr]] = exp( - y_hat[idS_lw[gr]:idS_up[gr], 2]);
     
     for(i in idS_lw[gr]:idS_up[gr]){
