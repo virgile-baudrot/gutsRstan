@@ -14,19 +14,20 @@ stan_guts <- function(data,
                       abs_tol = 1e-8,
                       max_num_steps = 1e3,
                       ode_integrator = "rk45", # other is "bdf"
+                      priors_list = NULL,
                       ...){
   
   ### ensures model_type is one of "SD" and "IT"
   if(is.null(model_type) || ! (model_type %in% c("SD","IT", "PROPER"))) {
     stop("You need to specify a 'model_type' among 'SD', 'IT' or 'PROPER'.")
   }
-  if(!(ode_integrator %in% c("rk45", "bdf"))){
+  if(!(ode_integrator %in% c("rk45", "rk45_2", "bdf"))){
     stop("You need to specify an 'ode_integrator' among 'rk45' and 'bdf'.")
   }
   
   ode_control <- list(rel_tol = rel_tol, abs_tol = abs_tol, max_num_steps = max_num_steps)
 
-  dataStan_withReplicate <- modelDataStan(data, model_type, ode_control)
+  dataStan_withReplicate <- modelDataStan(data, model_type, ode_control, priors_list)
   dataStan <- dataStan_withReplicate
   dataStan$replicate_conc = NULL
   dataStan$replicate_Nsurv = NULL
@@ -37,11 +38,13 @@ stan_guts <- function(data,
     model_object <- stanmodels$ode_TKTD_varSD
   } else if(model_type == "IT"){
     if(ode_integrator == "rk45"){
-      #model_object <- stanmodels$ode_TKTD_varIT
+      model_object <- stanmodels$ode_TKTD_varIT
+    }
+    if(ode_integrator == "rk45_2"){
       model_object <- stanmodels$ode_TKTD_varIT2
     }
     if(ode_integrator == "bdf"){
-      model_object <- stanmodels$ode_TKTD_varIT2_bdf
+      model_object <- stanmodels$ode_TKTD_varIT_bdf
     }
     
   } else if(model_type == "PROPER" && distribution == "loglogistic"){
