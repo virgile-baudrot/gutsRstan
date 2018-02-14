@@ -2,7 +2,7 @@
 #' 
 #' @export
 #' 
-modelDataStan <- function(data, model_type = NULL, ode_control = NULL){
+modelDataStan <- function(data, model_type = NULL, ode_control = NULL, priors_list = NULL){
   
   #------------ pool replicate when data is constant:
   if("survDataCstExp" %in% class(data)){ # data is a survData object
@@ -15,7 +15,12 @@ modelDataStan <- function(data, model_type = NULL, ode_control = NULL){
   ls_OUT <- observation_survData(data)
 
   # PRIORS
-  priors <- priors_survData(data, model_type = model_type)$priorsList
+  if(is.null(priors_list)){
+    priors <- priors_survData(data, model_type = model_type)$priorsList
+  } else{
+    priors <- priors_list
+  }
+  
     
   ls_OUT_2 <- unlist(list(ls_OUT, priors, ode_control), recursive = FALSE)
     
@@ -31,6 +36,9 @@ modelDataStan <- function(data, model_type = NULL, ode_control = NULL){
 #------------------------------------------------------------------------------
 
 observation_survData <- function(data){
+  
+  ## REMOVE time = 0:
+  #  data <- dplyr::filter(data, time != 0)
   
   ls_OUT <- list()
   
@@ -63,7 +71,7 @@ observation_survData <- function(data){
     dplyr::arrange(replicate, time) %>%
     dplyr::mutate(id_all = row_number() ) %>%
     dplyr::group_by(replicate) %>%
-    dplyr::mutate(Nprec = ifelse( time == 0, Nsurv, dplyr::lag(Nsurv) ),
+    dplyr::mutate(Nprec = ifelse( time == min(time), Nsurv, dplyr::lag(Nsurv) ),
                   Ninit = max(Nsurv)) %>%  # since it is grouped by replicate
     dplyr::ungroup()
   
