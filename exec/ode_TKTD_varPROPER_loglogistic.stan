@@ -4,11 +4,6 @@ functions {
 
    #include "common_functions.stan"
 
-  real loglogistic_lpdf(real y, real a, real b) {
-    
-      return log(b) - log(a) + (b - 1) * (log(y) - log(a)) - 2 * log1p_exp(b * (log(y) - log(a)));
-    
-    } 
 
   real[] TKTD_varPROPER( real t,
                      real[] y,
