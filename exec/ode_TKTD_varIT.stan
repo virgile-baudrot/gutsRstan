@@ -39,11 +39,12 @@ functions {
     x_i[1] = size(tconc);
   
     return(to_matrix(
-      integrate_ode_rk45(TKTD_varIT, y0, t0, ts, theta, 
+      integrate_ode_rk45(TKTD_varIT, y0, t0, ts, theta,
                          to_array_1d(append_row(to_vector(tconc), to_vector(conc))),
                          x_i,
                          // additional control parameters for the solver: real rel_tol, real abs_tol, int max_num_steps
                          odeParam[1], odeParam[2], odeParam[3])));
+
   }
 }
 
@@ -81,14 +82,22 @@ transformed data{
   
 }
 parameters {
-  real hb_log10;
-  real kd_log10;
-  real alpha_log10;
-  real beta_log10;
+  
+  // real hb_log10  ;
+  // real kd_log10 ;
+  // real alpha_log10 ;
+  real beta_log10  ;
+  
+  real sigma[3] ;
+
 
 }
 transformed parameters{
   
+  real hb_log10 = hb_meanlog10 + hb_sdlog10 * sigma[1] ;
+  real kd_log10 = kd_meanlog10 + kd_sdlog10 * sigma[2] ;
+  real alpha_log10 = alpha_meanlog10 + alpha_sdlog10 * sigma[3] ;
+   
   real<lower=0> param[1]; //
   
   matrix[n_data_Nsurv, 1] y_hat;
@@ -99,6 +108,7 @@ transformed parameters{
   real hb = 10^hb_log10; // hb
   real alpha = 10^alpha_log10; // alpha
   real beta = 10^beta_log10; // beta
+
   param[1] = 10^kd_log10; // kd
  
   for(gr in 1:n_group){
@@ -116,14 +126,20 @@ transformed parameters{
 }
 model {
 
-  hb_log10 ~ normal( hb_meanlog10, hb_sdlog10 );
-  kd_log10 ~ normal( kd_meanlog10, kd_sdlog10 );
-  alpha_log10  ~ normal( alpha_meanlog10,   alpha_sdlog10 );
-  beta_log10 ~ uniform( beta_minlog10 , beta_maxlog10 );
+  // hb_log10 ~ normal( hb_meanlog10, hb_sdlog10 );
+  // kd_log10 ~ normal( kd_meanlog10, kd_sdlog10 );
+  // alpha_log10  ~ normal( alpha_meanlog10,   alpha_sdlog10 );
+  
+  // beta_log10 ~ uniform( beta_minlog10 , beta_maxlog10 );
+  target += uniform_lpdf(beta_log10 | beta_minlog10 , beta_maxlog10 );
+  
+  target += normal_lpdf(sigma | 0, 1);
+  // sigma ~ normal(0,1);
 
   for(gr in 1:n_group){
-    
-    Nsurv[idS_lw[gr]:idS_up[gr]] ~ binomial( Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
+     
+    target += binomial_lpmf(Nsurv[idS_lw[gr]:idS_up[gr]] | Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
+    // Nsurv[idS_lw[gr]:idS_up[gr]] ~ binomial( Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
     
   }
 }

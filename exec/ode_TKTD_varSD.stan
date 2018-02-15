@@ -95,14 +95,21 @@ transformed data{
 }
 parameters {
 
-  real kk_log10;
-  real z_log10;
-  real kd_log10;
-  real hb_log10;
+  // real kk_log10;
+  // real z_log10;
+  // real kd_log10;
+  // real hb_log10;
+  
+  real sigma[4];
   
 }
 transformed parameters{
 
+  real hb_log10 = hb_meanlog10 + hb_sdlog10 * sigma[1];
+  real kd_log10 = kd_meanlog10 + kd_sdlog10 * sigma[2];
+  real z_log10  = z_meanlog10  + z_sdlog10  * sigma[3];
+  real kk_log10 = kk_meanlog10 + kk_sdlog10 * sigma[4];
+  
   real<lower=0> param[4]; //
   
   matrix[n_data_Nsurv,2] y_hat;
@@ -131,16 +138,20 @@ transformed parameters{
 }
 model {
   
-  kk_log10 ~ normal( kk_meanlog10, kk_sdlog10 );
-  z_log10  ~ normal( z_meanlog10,   z_sdlog10 );
-  kd_log10 ~ normal( kd_meanlog10, kd_sdlog10 );
-  hb_log10 ~ normal( hb_meanlog10, hb_sdlog10 );
+  // kk_log10 ~ normal( kk_meanlog10, kk_sdlog10 );
+  // z_log10  ~ normal( z_meanlog10,   z_sdlog10 );
+  // kd_log10 ~ normal( kd_meanlog10, kd_sdlog10 );
+  // hb_log10 ~ normal( hb_meanlog10, hb_sdlog10 );
+
+  target += normal_lpdf(sigma | 0, 1);
 
   //y0 ~ exponential(1e9); // Initial condition for y0 have to be put close to 0 !!!
   
   for(gr in 1:n_group){
     
-    Nsurv[idS_lw[gr]:idS_up[gr]] ~ binomial( Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
+    target += binomial_lpmf(Nsurv[idS_lw[gr]:idS_up[gr]] | Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
+    
+    // Nsurv[idS_lw[gr]:idS_up[gr]] ~ binomial( Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
   
   }
 }
