@@ -61,7 +61,7 @@ data {
   
    #include "data_guts.stan"
     
-    /* PRIORS */
+  /* PRIORS */
   real kk_meanlog10;
   real kk_sdlog10;
   real z_meanlog10;
@@ -95,11 +95,6 @@ transformed data{
 }
 parameters {
 
-  // real kk_log10;
-  // real z_log10;
-  // real kd_log10;
-  // real hb_log10;
-  
   real sigma[4];
   
 }
@@ -122,8 +117,7 @@ transformed parameters{
   param[4] = 10^kk_log10; // kk
   
   for(gr in 1:n_group){
-  /* initial time must be less than t0 = 0, so we use a very small close small number -1e-9 */
-   // y_hat[idS_lw[gr]:idS_up[gr],1:2] = solve_TKTD_varSD(y0, -1e-9, tNsurv[idS_lw[gr]:idS_up[gr]], param, tconc[idC_lw[gr]:idC_up[gr]], conc[idC_lw[gr]:idC_up[gr]], odeParam);
+  /* initial time must be less than t0 = 0, so we use a very small close small number 1e-9 to at at time tNsurv and tconc */
     y_hat[idS_lw[gr]:idS_up[gr],1:2] = solve_TKTD_varSD(y0, 0, tNsurv_ode[idS_lw[gr]:idS_up[gr]], param, tconc_ode[idC_lw[gr]:idC_up[gr]], conc[idC_lw[gr]:idC_up[gr]], odeParam);
 
     Psurv_hat[idS_lw[gr]:idS_up[gr]] = exp( - y_hat[idS_lw[gr]:idS_up[gr], 2]);
@@ -137,15 +131,8 @@ transformed parameters{
 
 }
 model {
-  
-  // kk_log10 ~ normal( kk_meanlog10, kk_sdlog10 );
-  // z_log10  ~ normal( z_meanlog10,   z_sdlog10 );
-  // kd_log10 ~ normal( kd_meanlog10, kd_sdlog10 );
-  // hb_log10 ~ normal( hb_meanlog10, hb_sdlog10 );
 
   target += normal_lpdf(sigma | 0, 1);
-
-  //y0 ~ exponential(1e9); // Initial condition for y0 have to be put close to 0 !!!
   
   for(gr in 1:n_group){
     

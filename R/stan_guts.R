@@ -33,25 +33,23 @@ stan_guts <- function(data,
   dataStan$replicate_Nsurv = NULL
   dataStan$Ninit = NULL
   
-  
   if(model_type == "SD"){
     model_object <- stanmodels$ode_TKTD_varSD
   } else if(model_type == "IT"){
     if(ode_integrator == "rk45"){
       model_object <- stanmodels$ode_TKTD_varIT
     }
-    if(ode_integrator == "rk45_2"){
-      model_object <- stanmodels$ode_TKTD_varIT2
-    }
     if(ode_integrator == "bdf"){
       model_object <- stanmodels$ode_TKTD_varIT_bdf
     }
-    
   } else if(model_type == "PROPER" && distribution == "loglogistic"){
-    model_object <- stanmodels$ode_TKTD_varPROPER_loglogistic
+    dataStan$proper_distribution = 1
+    model_object <- stanmodels$ode_TKTD_varPROPER
   } else if(model_type == "PROPER" && distribution == "lognormal"){
-    model_object <- stanmodels$ode_TKTD_varPROPER_lognormal
-  } else stop("'model_type' must be 'SD', 'IT' or 'PROPER'. For 'PROPER' models, please add the distribution 'loglogistic' or 'lognormal'.")
+    dataStan$proper_distribution = 2
+    model_object <- stanmodels$ode_TKTD_varPROPER
+  } else stop("'model_type' must be 'SD', 'IT' or 'PROPER'. For 'PROPER' models,
+              please add the distribution 'loglogistic' or 'lognormal'.")
   
   fit <- rstan::sampling(
     object = model_object,

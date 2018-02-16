@@ -82,10 +82,7 @@ transformed data{
   
 }
 parameters {
-  
-  // real hb_log10  ;
-  // real kd_log10 ;
-  // real alpha_log10 ;
+
   real beta_log10  ;
   
   real sigma[3] ;
@@ -101,7 +98,6 @@ transformed parameters{
   real<lower=0> param[1]; //
   
   matrix[n_data_Nsurv, 1] y_hat;
-  
   vector<lower=0, upper=1>[n_data_Nsurv] Psurv_hat;
   vector<lower=0, upper=1>[n_data_Nsurv] Conditional_Psurv_hat;
   
@@ -126,20 +122,13 @@ transformed parameters{
 }
 model {
 
-  // hb_log10 ~ normal( hb_meanlog10, hb_sdlog10 );
-  // kd_log10 ~ normal( kd_meanlog10, kd_sdlog10 );
-  // alpha_log10  ~ normal( alpha_meanlog10,   alpha_sdlog10 );
-  
-  // beta_log10 ~ uniform( beta_minlog10 , beta_maxlog10 );
   target += uniform_lpdf(beta_log10 | beta_minlog10 , beta_maxlog10 );
   
   target += normal_lpdf(sigma | 0, 1);
-  // sigma ~ normal(0,1);
 
   for(gr in 1:n_group){
      
     target += binomial_lpmf(Nsurv[idS_lw[gr]:idS_up[gr]] | Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
-    // Nsurv[idS_lw[gr]:idS_up[gr]] ~ binomial( Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
     
   }
 }

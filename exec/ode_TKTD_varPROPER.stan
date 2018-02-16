@@ -31,7 +31,6 @@ functions {
     
     // if_else statement
     real conc_linInterp = pulse_index != 0 ? linearInterp(t , tconc[pulse_index], tconc[pulse_index+1], conc[pulse_index], conc[pulse_index+1] ) : conc[1];
-    //real conc_linInterp = linearInterp(t , tconc[pulse_index], tconc[pulse_index+1], conc[pulse_index], conc[pulse_index+1] );
     
     // - model
     dy_dt[1] =  kd * ( conc_linInterp - y[1]);
@@ -44,7 +43,7 @@ functions {
     return(dy_dt);
   }
   
-  matrix solve_TKTD_varPROPER(real[] y0, real t0, real[] ts, real[] theta, real[] tconc, real[] conc){
+  matrix solve_TKTD_varPROPER(real[] y0, real t0, real[] ts, real[] theta, real[] tconc, real[] conc, real[] odeParam){
 
     int x_i[1];
     x_i[1] = size(tconc);
@@ -54,15 +53,17 @@ functions {
                          to_array_1d(append_row(to_vector(tconc), to_vector(conc))),
                          x_i,
                          // additional control parameters for the solver: real rel_tol, real abs_tol, int max_num_steps
-                         10e-8, 10e-5, 1e3)));
+                          odeParam[1], odeParam[2], odeParam[3])));
   }
 }
 
 data {
   
-   #include "data_guts.stan"
+  #include "data_guts.stan"
     
-    /* PRIORS */
+  int proper_distribution;  
+  /* PRIORS */
+  
   
   real kk_meanlog10;
   real kk_sdlog10;
@@ -81,16 +82,19 @@ transformed data{
   
 }
 parameters {
-  real kk_log10;
-  real kd_log10;
-  real hb_log10;
-  real alpha_log10;
+  
+  real sigma[4];
   real beta_log10;
   
   real z; // create parameter z
 
 }
 transformed parameters{
+
+  real hb_log10 = hb_meanlog10 + hb_sdlog10 * sigma[1] ;
+  real kd_log10 = kd_meanlog10 + kd_sdlog10 * sigma[2] ;
+  real alpha_log10 = alpha_meanlog10 + alpha_sdlog10 * sigma[3] ;
+  real kk_log10 = kk_meanlog10 + kk_sdlog10 * sigma[4] ;
 
   real<lower=0> param[4]; //
 
@@ -105,7 +109,7 @@ transformed parameters{
   
   for(gr in 1:n_group){
   /* initial time must be less than t0 = 0, so we use a very small close small number -1e-8 */
-    y_hat[idS_lw[gr]:idS_up[gr],1:2] = solve_TKTD_varPROPER(y0, -1e-9, tNsurv[idS_lw[gr]:idS_up[gr]], param, tconc[idC_lw[gr]:idC_up[gr]], conc[idC_lw[gr]:idC_up[gr]]);
+    y_hat[idS_lw[gr]:idS_up[gr],1:2] = solve_TKTD_varPROPER(y0, 0, tNsurv_ode[idS_lw[gr]:idS_up[gr]], param, tconc_ode[idC_lw[gr]:idC_up[gr]], conc[idC_lw[gr]:idC_up[gr]], odeParam);
     
     Psurv_hat[idS_lw[gr]:idS_up[gr]] = exp( - y_hat[idS_lw[gr]:idS_up[gr], 2]);
     
@@ -117,21 +121,21 @@ transformed parameters{
   }
 
 }
-model {
+model{
   
-  kk_log10 ~ normal( kk_meanlog10, kk_sdlog10 );
-  kd_log10 ~ normal( kd_meanlog10, kd_sdlog10 );
-  hb_log10 ~ normal( hb_meanlog10, hb_sdlog10 );
-  alpha_log10  ~ normal( alpha_meanlog10,   alpha_sdlog10 );
-  beta_log10 ~ uniform( beta_minlog10 , beta_maxlog10 );
-
-  z ~  loglogistic(10^alpha_log10, 10^beta_log10); // for log-logistic
-  //z ~ lognormal(10^mu_log10, 10^sigma_log10); // for lognormal law with parameter mu and sigma
+  target += normal_lpdf(sigma | 0, 1);
+  
+  target += uniform_lpdf(beta_log10 | beta_minlog10 , beta_maxlog10 );
+  
+  if(proper_distribution == 1){
+    target += loglogistic_lpdf(z | 10^alpha_log10, 10^beta_log10)
+  }
+  if(proper_distribution == 2){
+    target += lognormal_lpdf(z | 10^alpha_log10, 10^beta_log10)
+  }
 
   for(gr in 1:n_group){
-    
-    Nsurv[idS_lw[gr]:idS_up[gr]] ~ binomial( Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
-  
+     target += binomial_lpmf(Nsurv[idS_lw[gr]:idS_up[gr]] | Nprec[idS_lw[gr]:idS_up[gr]], Conditional_Psurv_hat[idS_lw[gr]:idS_up[gr]]);
   }
 }
 generated quantities {
