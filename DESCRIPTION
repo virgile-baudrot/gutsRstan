@@ -1,16 +1,28 @@
 Package: rstanTKTD
 Type: Package
-Title: What the package does (short line)
+Title: Modelling Tools for Survival Data in Ecotoxicology: General Unified
+    Threshold model for Survival (GUTS)
 Version: 1.0
 Date: 2017-09-15
-Author: Virgile Baudrot
+Author:
+    Virgile Baudrot [aut],
+    Sandrine Charles [aut]
 Maintainer: Virgile Baudrot <virgile.baudrot@posteo.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+BugReports: https://github.com/virgile-baudrot/rstanTKTD
+Description: Tools for ecotoxicologists and regulators dedicated to the
+    mathematical and statistical modelling of toxicity test data. They use advanced and
+    innovative methods for a valuable quantitative environmental risk assessment.
+License:GPL (>=2)
 Depends: R (>= 3.0.2), Rcpp (>= 0.12.12), methods
+<<<<<<< HEAD
 Imports: dplyr(>= 0.7.4), rstan (>= 2.16.2), rstantools (>= 1.3.0), ggplot2, morse (>= 3.0.0)
+=======
+Imports: dplyr(>= 0.7.4), rstan (>= 2.16.2),
+    rstantools (>= 1.3.0), ggplot2,  morse (>= 3.0.0), deSolve
+>>>>>>> c150f5c... DESCRIPTION: update DESCRIPTION
 LinkingTo: StanHeaders (>= 2.16.0.1), rstan (>= 2.16.2), BH (>= 1.65.0.1), Rcpp (>= 0.12.12), RcppEigen (>= 0.3.3.3.0)
 RoxygenNote: 6.0.1
-Suggests: knitr,
+Suggests:
+    knitr,
     rmarkdown
 VignetteBuilder: knitr
