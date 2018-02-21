@@ -25,17 +25,13 @@ vignettes/*.pdf
 *.knit.md
 .Rproj.user
 inst/doc
-
 # C++ files generated when building
 src/*
-
 # man files
 man/*
-
 # cleanup files
 # cleanup
 # cleanup.win
-
 # Files added:
 # ARTICLE/*
 DATA_SIMULATION/*

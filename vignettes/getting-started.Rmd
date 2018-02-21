@@ -1,0 +1,111 @@
+---
+title: "Getting started with rstanTKTD"
+author: "Virgile Baudrot and Sandrine Charles"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  fig.width = 7,
+  fig.height = 4,
+  cache = TRUE,
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+```{r, echo=FALSE, results='hide'}
+library(rstanTKTD)
+library(morse)
+```
+
+The package `rstanTKTD` is devoted to the analysis of data from standard toxicity
+tests. It provides a simple workflow to calibrate GUTS models. This document illustrates
+a typical use of `rstanTKTD` on survival data, which can be followed
+step-by-step to analyze new datasets.
+
+Analysis of results by visualization is possible with the package `morse`.
+
+# GUTS-SD
+
+Here is a typical session to analyse concentration-dependent time-course data
+using the so-called ["Stochastic Death" (SD) model](modelling.pdf):
+
+```{r TKTDcst, cache=TRUE}
+# (1) load dataset
+data(diazinon)
+
+# (2) check structure and integrity of the dataset
+survDataCheck(propiconazole)
+
+# (3) create a `survData` object
+dat <- survData(propiconazole)
+
+# (4) represent the number of survivors as a function of time
+plot(dat, pool.replicate = FALSE)
+
+# (5) check information on the experimental design
+summary(dat)
+```
+
+### TK-TD model "SD"
+
+To fit the *Stochastic Death* model, we have to specify the `model_type` as `"SD"`:
+
+```{r, cache=TRUE, echo=TRUE}
+# (6) fit the TK-TD model SD
+fit_cstSD <- survFit(dat, quiet = TRUE, model_type = "SD")
+```
+
+Then, the `summary` function provides parameters estimates as medians and 95\% credible intervals.
+
+```{r, cache=TRUE}
+# (7) summary of parameters estimates
+summary(fit_cstSD)
+```
+
+The `plot` function provides a representation of the fitting for each replicates
+
+```{r, cache=TRUE}
+plot(fit_cstSD)
+```
+
+Original data can be added by using the option `adddata = TRUE`
+
+```{r, cache=TRUE}
+plot(fit_cstSD, adddata = TRUE)
+```
+
+A posterior predictive check is also possible using function `ppc`:
+
+```{r, cache=TRUE}
+ppc(fit_cstSD)
+```
+
+Compared to the target time analysis, TK-TD modelling allows to compute and plot the lethal concentration for any *x* percentage and at any time-point. The chosen time-point can be specified with `time_LCx`, by default the maximal time-point in the dataset is used.
+
+```{r cstSDLCx, cache=TRUE}
+# LC50 at the maximum time-point:
+LCx_cstSD <- LCx(fit_cstSD, X = 50)
+plot(LCx_cstSD)
+
+# LC50 at time = 2
+LCx(fit_cstSD, X = 50, time_LCx = 2) %>% plot()
+## Note the use of the pipe operator, `%>%`, which is a powerful tool for clearly expressing a sequence of multiple operations.
+## For more information on pipes, see: http://r4ds.had.co.nz/pipes.html
+```
+
+
+# GUTS-IT
+
+
+# GUTS-PROPER lognormal
+
+
+# GUTS-PROPER loglogistic
