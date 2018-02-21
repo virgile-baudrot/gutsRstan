@@ -1,5 +1,26 @@
 #' Create a stanfit from a stanguts object
 #' 
+#' @param x an object used to select a method \code{stanguts_to_stanfit}
+#' @param \dots Further arguments to be passed to generic methods
+#' 
+#' @export
+stanguts_to_stanfit <- function(x, ...){
+  UseMethod("stanguts_to_stanfit")
+}
+
+#' Create a survFit from a stanguts object
+#' 
+#' @param x an object used to select a method \code{stanguts_to_survFit}
+#' @param \dots Further arguments to be passed to generic methods
+#' 
+#' @export
+stanguts_to_survFit <- function(x, ...){
+  UseMethod("stanguts_to_survFit")
+}
+
+
+#' Create a stanfit from a stanguts object
+#' 
 #' Create a stanfit (\code{rstan}) from a stanguts object.
 #'
 #' @param stanguts An object of class \code{stanguts}.
@@ -23,7 +44,6 @@ stanguts_to_stanfit.stanguts <- function(stanguts){
 #'   
 #' @export
 #'
-
 stanguts_to_survFit.stanguts <- function(stanguts,
                                        extend_time = 100){
   
@@ -80,7 +100,7 @@ stanguts_to_survFit.stanguts <- function(stanguts,
     msg <- "The estimation of the dominant rate constant (model parameter kd) lies 
     outside the range used to define its prior distribution which indicates that this
     rate is very high and difficult to estimate from this experiment !"
-    warnings <- msgTableAdd(warnings, "kd_outRange", msg)
+    warnings <- morse:::msgTableAdd(warnings, "kd_outRange", msg)
     ## print the message
     warning(msg, call. = FALSE)
   }
@@ -91,7 +111,7 @@ stanguts_to_survFit.stanguts <- function(stanguts,
     parameter hb) lies outside the range used to define its prior distribution 
     which indicates that this rate is very low and so difficult to estimate 
     from this experiment !"
-    warnings <- msgTableAdd(warnings, "hb_outRange", msg)
+    warnings <- morse:::msgTableAdd(warnings, "hb_outRange", msg)
     ## print the message
     warning(msg, call. = FALSE)
   }
@@ -103,7 +123,7 @@ stanguts_to_survFit.stanguts <- function(stanguts,
       msg <- "The estimation of the killing rate (model parameter k) lies
       outside the range used to define its prior distribution which indicates
       that this rate is very high and difficult to estimate from this experiment !"
-      warnings <- msgTableAdd(warnings, "kk_outRange", msg)
+      warnings <- morse:::msgTableAdd(warnings, "kk_outRange", msg)
       ## print the message
       warning(msg, call. = FALSE)
     }
@@ -115,7 +135,7 @@ stanguts_to_survFit.stanguts <- function(stanguts,
       (model parameter z) lies outside the range of tested concentration 
       and may be unreliable as the prior distribution on this parameter is
       defined from this range !"
-      warnings <- msgTableAdd(warnings, "z_outRange", msg)
+      warnings <- morse:::msgTableAdd(warnings, "z_outRange", msg)
       ## print the message
       warning(msg, call. = FALSE)
     }
@@ -130,7 +150,7 @@ stanguts_to_survFit.stanguts <- function(stanguts,
       msg <- "The estimation of log-logistic median (model parameter alpha) 
       lies outside the range of tested concentration and may be unreliable as 
       the prior distribution on this parameter is defined from this range !"
-      warnings <- msgTableAdd(warnings, "alpha_outRange", msg)
+      warnings <- morse:::msgTableAdd(warnings, "alpha_outRange", msg)
       ## print the message
       warning(msg, call. = FALSE)
     }
@@ -143,7 +163,7 @@ stanguts_to_survFit.stanguts <- function(stanguts,
       msg <- "The estimation of the killing rate (model parameter k) lies
       outside the range used to define its prior distribution which indicates
       that this rate is very high and difficult to estimate from this experiment !"
-      warnings <- msgTableAdd(warnings, "kk_outRange", msg)
+      warnings <- morse:::msgTableAdd(warnings, "kk_outRange", msg)
       ## print the message
       warning(msg, call. = FALSE)
     }
@@ -154,23 +174,13 @@ stanguts_to_survFit.stanguts <- function(stanguts,
       msg <- "The estimation of log-logistic median (model parameter alpha) 
       lies outside the range of tested concentration and may be unreliable as 
       the prior distribution on this parameter is defined from this range !"
-      warnings <- msgTableAdd(warnings, "alpha_outRange", msg)
+      warnings <- morse:::msgTableAdd(warnings, "alpha_outRange", msg)
       ## print the message
       warning(msg, call. = FALSE)
     }
   }
   
-  ##
-  ## MCMC information
-  ## 
-  mcmcInfo = data.frame(n.iter = n.iter,
-                        n.chains = n.chains,
-                        n.adapt = n.adapt,
-                        thin.interval = thin.interval,
-                        n.warmup = n.warmup)
-  
-  
-  ##
+  ## transformed.data
   transformed.data <- data.frame(
     replicate = jags.data$replicate,
     time = jags.data$time,
