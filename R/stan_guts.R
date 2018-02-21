@@ -17,7 +17,7 @@ stan_guts <- function(data,
                       priors_list = NULL,
                       # rsta::sampling
                       adapt_delta = 0.95,
-                      chains = 4,
+                      chains = 3,
                       iter = 2000,
                       warmup = 1000,
                       thin = 1,
@@ -61,12 +61,16 @@ stan_guts <- function(data,
     object = model_object,
     data = dataStan,
     control = list(adapt_delta = adapt_delta),
+    chains = chains,
+    iter = iter,
+    warmup = warmup,
+    thin = thin,
     ...)
   
   ##
   ## MCMC information
   ## 
-  mcmcInfo = data.frame(n.iter = iter,
+  mcmcInfo <- data.frame(n.iter = iter,
                         n.chains = chains,
                         thin.interval = thin,
                         n.warmup = warmup)
