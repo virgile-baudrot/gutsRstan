@@ -76,9 +76,25 @@ data {
 transformed data{
 
   real<lower=0> y0[2];
+  real odeParam[3];
+
+  real tNsurv_ode[n_data_Nsurv]; // time of Nbr survival to include in the ode !
+  real tconc_ode[n_data_conc]; // time of Nbr survival to include in the ode !
 
   y0[1] = 0;
   y0[2] = 0;
+  
+  // Add odeSolveParameters
+  odeParam[1] = rel_tol;
+  odeParam[2] = abs_tol;
+  odeParam[3] = max_num_steps;
+  
+  for(gr in 1:n_group){
+    tNsurv_ode[idS_lw[gr]:idS_up[gr]] = tNsurv[idS_lw[gr]:idS_up[gr]];
+    tNsurv_ode[idS_lw[gr]] = tNsurv[idS_lw[gr]] + 1e-9 ; // to start ode integrator at 0
+    tconc_ode[idC_lw[gr]:idC_up[gr]] = tconc[idC_lw[gr]:idC_up[gr]];
+    tconc_ode[idC_lw[gr]] = tconc[idC_lw[gr]] + 1e-9 ; // to start ode integrator at 0
+  }
   
 }
 parameters {
@@ -128,10 +144,10 @@ model{
   target += uniform_lpdf(beta_log10 | beta_minlog10 , beta_maxlog10 );
   
   if(proper_distribution == 1){
-    target += loglogistic_lpdf(z | 10^alpha_log10, 10^beta_log10)
+    target += loglogistic_lpdf(z | 10^alpha_log10, 10^beta_log10);
   }
   if(proper_distribution == 2){
-    target += lognormal_lpdf(z | 10^alpha_log10, 10^beta_log10)
+    target += lognormal_lpdf(z | 10^alpha_log10, 10^beta_log10);
   }
 
   for(gr in 1:n_group){
