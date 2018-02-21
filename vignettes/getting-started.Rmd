@@ -5,8 +5,10 @@ date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include = FALSE}
@@ -20,7 +22,7 @@ knitr::opts_chunk$set(
 ```
 
 
-```{r, echo=FALSE, results='hide'}
+```{r package, echo=FALSE, results='hide'}
 library(rstanTKTD)
 library(morse)
 ```
@@ -32,60 +34,130 @@ step-by-step to analyze new datasets.
 
 Analysis of results by visualization is possible with the package `morse`.
 
-# GUTS-SD
+# TK-TD fitting with GUTS-SD, GUTS-IT, GUTS-PROPER lognormal and GUTS-PROPER loglogistic
+
+## Loading data
 
 Here is a typical session to analyse concentration-dependent time-course data
-using the so-called ["Stochastic Death" (SD) model](modelling.pdf):
+using the so-called GUTS models (Jager et al., 2011).
 
-```{r TKTDcst, cache=TRUE}
+```{r data, cache=TRUE}
 # (1) load dataset
-data(diazinon)
+data("data_Diazinon")
 
-# (2) check structure and integrity of the dataset
-survDataCheck(propiconazole)
+## ---- OPTIONAL - using package 'morse'
+# (2) : check structure and integrity of the dataset, with the package morse
+survDataCheck(data_Diazinon)
 
-# (3) create a `survData` object
-dat <- survData(propiconazole)
+# (3) OPTIONAL - using package 'morse': represent the number of survivors as a function of time
+plot(survData(data_Diazinon), pool.replicate = FALSE)
 
-# (4) represent the number of survivors as a function of time
-plot(dat, pool.replicate = FALSE)
-
-# (5) check information on the experimental design
-summary(dat)
+# (4) check information on the experimental design
+summary(survData(data_Diazinon))
 ```
 
-### TK-TD model "SD"
+## Fitting models
 
-To fit the *Stochastic Death* model, we have to specify the `model_type` as `"SD"`:
+- To fit the *Stochastic Death* model, GUTS-SD, we have to specify the `model_type` as `"SD"`.
+- To fit the *Individual Tolerance* model, GUTS-IT, we have to specify the `model_type` as `"IT"`.
+- To fit the general model, GUTS-PROPER, we have to specify the `model_type` as `"PROPER"` and the distribution `lognormal` or `loglogistic`.
 
-```{r, cache=TRUE, echo=TRUE}
-# (6) fit the TK-TD model SD
-fit_cstSD <- survFit(dat, quiet = TRUE, model_type = "SD")
+Note that the implementation of the `IT`model is done with a loglogistic distribution.
+
+```{r fit, cache=TRUE, echo=TRUE}
+# # OPTION for the number of cores:
+# options(mc.cores = 3)
+#
+# # (6) fit the TK-TD model SD
+# fit_SD_diaz <- stan_guts(data_Diazinon, model_type = "SD")
+# save(fit_SD_diaz, file = "tests/testdata/fit_SD_diaz.rda")
+#
+# # (7) fit the TK-TD model IT
+# fit_IT_diaz <- stan_guts(data_Diazinon, model_type = "IT", warmup = 500, chains = 3)
+# save(fit_IT_diaz, file = "tests/testdata/fit_IT_diaz.rda")
+#
+# # (8) fit the TK-TD model PROPER with distribution 'lognormal'
+# fit_PROPERlogNormal_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", distribution = "lognormal")
+# save(fit_PROPERlogNormal_diaz, file = "tests/testdata/fit_PROPERlogNormal_diaz.rda")
+#
+# # (9) fit the TK-TD model PROPER with distribution 'loglogistic'
+# fit_PROPERlogLogistic_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", distribution = "loglogistic")
+# save(fit_PROPERlogLogistic_diaz, file = "tests/testdata/fit_PROPERlogLogistic_diaz.rda")
+load(file = "tests/testdata/fit_SD_diaz.rda")
+load(file = "tests/testdata/fit_IT_diaz.rda")
+load(file = "tests/testdata/fit_PROPERlogNormal_diaz.rda")
+load(file = "tests/testdata/fit_PROPERlogLogistic_diaz.rda")
 ```
 
-Then, the `summary` function provides parameters estimates as medians and 95\% credible intervals.
+# Using functions from package `rstan`
+
+```{r stanfit, cache=TRUE}
+stanfit_SD_diaz <- stanguts_to_stanfit(fit_SD_diaz)
+stanfit_IT_diaz <- stanguts_to_stanfit(fit_IT_diaz)
+stanfit_PROPERlogNormal_diaz <- stanguts_to_stanfit(fit_PROPERlogNormal_diaz)
+stanfit_PROPERlogLogistic_diaz <- stanguts_to_stanfit(fit_PROPERlogLogistic_diaz)
+```
+
+## Print
+
+```{r print, cache=TRUE}
+print(stanfit_SD_diaz)
+print(stanfit_IT_diaz)
+print(stanfit_PROPERlogNormal_diaz)
+print(stanfit_PROPERlogLogistic_diaz)
+```
+
+## Pairs
+
+```{r pairs, cache=TRUE}
+pairs(stanfit_SD_diaz, pars = c("hb_log10", "kd_log10", "z_log10", "kk_log10"))
+pairs(stanfit_IT_diaz, pars = c("hb_log10", "kd_log10", "alpha_log10", "beta_log10"))
+pairs(stanfit_PROPERlogNormal_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
+pairs(stanfit_PROPERlogLogistic_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
+```
+
+# Using functions from package `morse (version >= 3.1.0)`
+
+First of all, we have to convert the object of class `stanguts` into an object of class `survFit`:
+
+```{r survFit, cache=TRUE}
+survFit_SD_diaz <- stanguts_to_survFit(fit_SD_diaz)
+survFit_IT_diaz <- stanguts_to_survFit(fit_IT_diaz)
+survFit_PROPERlogNormal_diaz <- stanguts_to_survFit(fit_PROPERlogNormal_diaz)
+survFit_PROPERlogLogistic_diaz <- stanguts_to_survFit(fit_PROPERlogLogistic_diaz)
+```
+
+## Summary
+
+The `summary` function provides parameters estimates as medians and 95\% credible intervals.
 
 ```{r, cache=TRUE}
-# (7) summary of parameters estimates
-summary(fit_cstSD)
+summary(survFit_SD_diaz)
+summary(survFit_IT_diaz)
+summary(survFit_PROPERlogNormal_diaz)
+summary(survFit_PROPERlogLogistic_diaz)
 ```
+
+## Plot
 
 The `plot` function provides a representation of the fitting for each replicates
 
 ```{r, cache=TRUE}
-plot(fit_cstSD)
+plot(survFit_SD_diaz)
+plot(survFit_IT_diaz)
+plot(survFit_PROPERlogNormal_diaz)
+plot(survFit_PROPERlogLogistic_diaz)
 ```
 
-Original data can be added by using the option `adddata = TRUE`
+## PPC
+
+The `ppc` function to check posterior prediction
 
 ```{r, cache=TRUE}
-plot(fit_cstSD, adddata = TRUE)
-```
-
-A posterior predictive check is also possible using function `ppc`:
-
-```{r, cache=TRUE}
-ppc(fit_cstSD)
+plot(survFit_SD_diaz)
+plot(survFit_IT_diaz)
+plot(survFit_PROPERlogNormal_diaz)
+plot(survFit_PROPERlogLogistic_diaz)
 ```
 
 Compared to the target time analysis, TK-TD modelling allows to compute and plot the lethal concentration for any *x* percentage and at any time-point. The chosen time-point can be specified with `time_LCx`, by default the maximal time-point in the dataset is used.
@@ -100,12 +172,3 @@ LCx(fit_cstSD, X = 50, time_LCx = 2) %>% plot()
 ## Note the use of the pipe operator, `%>%`, which is a powerful tool for clearly expressing a sequence of multiple operations.
 ## For more information on pipes, see: http://r4ds.had.co.nz/pipes.html
 ```
-
-
-# GUTS-IT
-
-
-# GUTS-PROPER lognormal
-
-
-# GUTS-PROPER loglogistic
