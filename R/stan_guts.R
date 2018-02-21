@@ -7,14 +7,20 @@
 #' @export
 #' 
 stan_guts <- function(data,
+                      # specific to stan_guts
                       model_type = NULL,
                       distribution = NULL,
-                      adapt_delta = 0.95,
                       rel_tol = 1e-8,
                       abs_tol = 1e-8,
                       max_num_steps = 1e3,
                       ode_integrator = "rk45", # other is "bdf"
                       priors_list = NULL,
+                      # rsta::sampling
+                      adapt_delta = 0.95,
+                      chains = 4,
+                      iter = 2000,
+                      warmup = 1000,
+                      thin = 1,
                       ...){
   
   ### ensures model_type is one of "SD" and "IT"
@@ -57,13 +63,24 @@ stan_guts <- function(data,
     control = list(adapt_delta = adapt_delta),
     ...)
   
+  ##
+  ## MCMC information
+  ## 
+  mcmcInfo = data.frame(n.iter = iter,
+                        n.chains = chains,
+                        thin.interval = thin,
+                        n.warmup = warmup)
+  
+  ## OBJECT TO RETURN
+  
   ls_out <- list(stanfit = fit,
                  data = data,
                  dataStan = dataStan_withReplicate,
+                 mcmcInfo = mcmcInfo,
                  model_type = model_type,
                  distribution = distribution)
   
-  class(ls_out) <- "stanTKTD"
+  class(ls_out) <- "stanguts"
   
   ## ------ WARNINGS
   
