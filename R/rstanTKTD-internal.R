@@ -16,7 +16,7 @@ extract_MCMCparameters <- function(x){
   return(df_stanEstim)
 }
 
-#' Extract parameters name for a \code{stanTKTD} object
+#' Extract parameters name for a \code{stanguts} object
 #' 
 #' @export
 #'  
@@ -42,9 +42,9 @@ extract_MCMCppc <- function(x){
   return(mat_stanPredict)
 }
 
-#' Extract the \code{stanfit} object of a \code{stanTKTD} object
+#' Extract the \code{stanfit} object of a \code{stanguts} object
 #' 
-#' Extract the \code{stanfit} object of a \code{stanTKTD} object.
+#' Extract the \code{stanfit} object of a \code{stanguts} object.
 #' 
 #' @param x an object used to select a method
 #' @param \dots Further arguments to be passed to generic methods
@@ -55,12 +55,12 @@ extract_stanfit <- function(x, ...){
   UseMethod("extract_stanfit")
 }
 
-#' Extract the \code{stanfit} object of a \code{stanTKTD} object
+#' Extract the \code{stanfit} object of a \code{stanguts} object
 #' 
-#' @param x a,n object of class \code{stanTKTD}
+#' @param x a,n object of class \code{stanguts}
 #' 
 #' @export
 #'  
-extract_stanfit.stanTKTD <- function(x){
+extract_stanfit.stanguts <- function(x){
   return(x$stanfit)
 }
