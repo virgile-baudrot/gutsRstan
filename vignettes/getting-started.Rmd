@@ -91,6 +91,8 @@ load(file = "tests/testdata/fit_PROPERlogLogistic_diaz.rda")
 
 # Using internal functions for a quick plot
 
+## Plot of survival rate
+
 ```{r rstanGUTS, cache = TRUE}
 plot_stanguts(fit_SD_diaz)
 plot_stanguts(fit_IT_diaz)
@@ -98,6 +100,14 @@ plot_stanguts(fit_PROPERlogNormal_diaz)
 plot_stanguts(fit_PROPERlogLogistic_diaz)
 ```
 
+## Plot of number of survivors
+
+```{r rstanGUTS, cache = TRUE}
+plot_stanguts(fit_SD_diaz, data_type = "Number")
+plot_stanguts(fit_IT_diaz, data_type = "Number")
+plot_stanguts(fit_PROPERlogNormal_diaz, data_type = "Number")
+plot_stanguts(fit_PROPERlogLogistic_diaz, data_type = "Number")
+```
 
 # Using functions from package `rstan`
 
