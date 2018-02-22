@@ -61,34 +61,41 @@ summary(survData(data_Diazinon))
 
 - To fit the *Stochastic Death* model, GUTS-SD, we have to specify the `model_type` as `"SD"`.
 - To fit the *Individual Tolerance* model, GUTS-IT, we have to specify the `model_type` as `"IT"`.
-- To fit the general model, GUTS-PROPER, we have to specify the `model_type` as `"PROPER"` and the distribution `lognormal` or `loglogistic`.
+- To fit the general model, GUTS-PROPER, we have to specify the `model_type` as `"PROPER"`.
 
-Note that the implementation of the `IT`model is done with a loglogistic distribution.
+Both model `IT` and `PROPER`support the `lognormal` and `loglgistic` distribution which has to be
+specified with the argument `distribution`. The default is `loglogistic`.
 
-```{r fit, cache=TRUE, echo=TRUE}
-# # OPTION for the number of cores:
-# options(mc.cores = 3)
-#
-# # (6) fit the TK-TD model SD
-# fit_SD_diaz <- stan_guts(data_Diazinon, model_type = "SD")
-# save(fit_SD_diaz, file = "vignettes/data_fit/fit_SD_diaz.rda")
-#
-# # (7) fit the TK-TD model IT
-# fit_IT_diaz <- stan_guts(data_Diazinon, model_type = "IT", warmup = 500, chains = 3)
-# save(fit_IT_diaz, file = "vignettes/data_fit/fit_IT_diaz.rda")
-#
-# # (8) fit the TK-TD model PROPER with distribution 'lognormal'
-# fit_PROPERlogNormal_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", distribution = "lognormal")
-# save(fit_PROPERlogNormal_diaz, file = "vignettes/data_fit/fit_PROPERlogNormal_diaz.rda")
-#
-# # (9) fit the TK-TD model PROPER with distribution 'loglogistic'
-# fit_PROPERlogLogistic_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", distribution = "loglogistic")
-# save(fit_PROPERlogLogistic_diaz, file = "vignettes/data_fit/fit_PROPERlogLogistic_diaz.rda")
+```{r fit, cache=TRUE, echo=TRUE, eval=FALSE}
+# OPTION for the number of cores:
+options(mc.cores = 3)
+
+# (6) fit the TK-TD model SD
+fit_SD_diaz <- stan_guts(data_Diazinon, model_type = "SD")
+
+# (7) fit the TK-TD model IT
+fit_IT_diaz <- stan_guts(data_Diazinon, model_type = "IT")
+
+# (8) fit the TK-TD model PROPER with distribution 'loglogistic'
+fit_PROPERlogLogistic_diaz <- stan_guts(data_Diazinon, model_type = "PROPER")
+
+# (9) fit the TK-TD model IT with distribution 'lognormal'
+fit_ITlogNormal_diaz <- stan_guts(data_Diazinon, model_type = "IT", distribution = "lognormal")
+
+# (10) fit the TK-TD model PROPER with distribution 'lognormal'
+fit_PROPERlogNormal_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", distribution = "lognormal")
+```
+
+```{r, echo=FALSE}
+save(fit_SD_diaz, file = "vignettes/data_fit/fit_SD_diaz.rda")
+save(fit_IT_diaz, file = "vignettes/data_fit/fit_IT_diaz.rda")
+save(fit_PROPERlogLogistic_diaz, file = "vignettes/data_fit/fit_PROPERlogLogistic_diaz.rda")
+save(fit_PROPERlogNormal_diaz, file = "vignettes/data_fit/fit_PROPERlogNormal_diaz.rda")
 
 load(file = "data_fit/fit_SD_diaz.rda")
 load(file = "data_fit/fit_IT_diaz.rda")
-load(file = "data_fit/fit_PROPERlogNormal_diaz.rda")
 load(file = "data_fit/fit_PROPERlogLogistic_diaz.rda")
+load(file = "data_fit/fit_PROPERlogNormal_diaz.rda")
 ```
 
 # Using internal functions for a quick plot

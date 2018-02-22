@@ -52,11 +52,13 @@ data {
   
    #include "data_guts.stan"
     
-    /* PRIORS */
-    real alpha_meanlog10;
-    real alpha_sdlog10;
-    real beta_minlog10;
-    real beta_maxlog10;
+   int proper_distribution;  
+
+   /* PRIORS */
+   real alpha_meanlog10;
+   real alpha_sdlog10;
+   real beta_minlog10;
+   real beta_maxlog10;
 }
 transformed data{
   
@@ -112,8 +114,14 @@ transformed parameters{
       y_hat[idS_lw[gr]:idS_up[gr], 1] = solve_TKTD_varIT(y0, 0, tNsurv_ode[idS_lw[gr]:idS_up[gr]], param, tconc_ode[idC_lw[gr]:idC_up[gr]], conc[idC_lw[gr]:idC_up[gr]], odeParam)[,1];
 
     for(i in idS_lw[gr]:idS_up[gr]){
-      
-     Psurv_hat[i] = exp(- hb * tNsurv_ode[i]) * (1-exp(loglogistic_lcdf(max(y_hat[idS_lw[gr]:i, 1]) | alpha, beta)));
+     
+     if(proper_distribution == 1){
+       Psurv_hat[i] = exp(- hb * tNsurv_ode[i]) * (1-exp(loglogistic_lcdf(max(y_hat[idS_lw[gr]:i, 1]) | alpha, beta)));
+     }
+     if(proper_distribution == 2){
+       Psurv_hat[i] = exp(- hb * tNsurv_ode[i]) * (1-exp(lognormal_lcdf(max(y_hat[idS_lw[gr]:i, 1]) | alpha, beta)));
+     }
+     
      Conditional_Psurv_hat[i] =  i == idS_lw[gr] ? Psurv_hat[i] : Psurv_hat[i] / Psurv_hat[i-1] ;
      
     }

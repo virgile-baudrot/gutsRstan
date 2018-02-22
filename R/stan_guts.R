@@ -21,8 +21,9 @@
 #' }
 #' @param model_type The type of GUTS TK-TD model used: \code{'SD'}, \code{'IT'}
 #'   or  \code{'PROPER'}.
-#' @param distribution The type of distribution used for the model
-#'   \code{PROPER}: either \code{"loglogistic"} or \code{"lognormal"}.
+#' @param distribution The type of distribution used for the model \code{'IT'} and
+#'   \code{'PROPER'}: either \code{"loglogistic"} or \code{"lognormal"}. The
+#'   default is \code{"loglogistic"}.
 #' @param ode_integrator A string \code{"rk45"} or \code{"bdf"} specifying
 #'   the integrator for solving systems of differential equations (ODEs).
 #'   The default is \code{"rk45"}.
@@ -110,7 +111,7 @@
 stan_guts <- function(data,
                       # specific to stan_guts
                       model_type = NULL,
-                      distribution = NULL,
+                      distribution = "loglogistic",
                       ode_integrator = "rk45", # other is "bdf"
                       rel_tol = 1e-8,
                       abs_tol = 1e-8,
@@ -128,35 +129,48 @@ stan_guts <- function(data,
   if(is.null(model_type) || ! (model_type %in% c("SD","IT", "PROPER"))) {
     stop("You need to specify a 'model_type' among 'SD', 'IT' or 'PROPER'.")
   }
-  if(!(ode_integrator %in% c("rk45", "rk45_2", "bdf"))){
+  if(!(ode_integrator %in% c("rk45", "bdf"))){
     stop("You need to specify an 'ode_integrator' among 'rk45' and 'bdf'.")
+  }
+  if(!(distribution %in% c("loglogistic", "lognormal"))){
+    stop("You need to specify a 'distribution' among 'loglogistic'
+         or 'lognormal'.")
+  }
+  if(!(model_type %in% c("SD", "IT", "PROPER"))){
+    stop("'model_type' must be 'SD', 'IT' or 'PROPER'. For 'IT' and 'PROPER' models,
+                please add the distribution 'loglogistic' or 'lognormal'.")
   }
   
   ode_control <- list(rel_tol = rel_tol, abs_tol = abs_tol, max_num_steps = max_num_steps)
 
   dataStan_withReplicate <- modelDataStan(data, model_type, ode_control, priors_list)
   dataStan <- dataStan_withReplicate
-  dataStan$replicate_conc = NULL
-  dataStan$replicate_Nsurv = NULL
-  dataStan$Ninit = NULL
+  dataStan$replicate_conc <- NULL
+  dataStan$replicate_Nsurv <- NULL
+  dataStan$Ninit <- NULL
   
-  if(model_type == "SD"){
-    model_object <- stanmodels$ode_TKTD_varSD
-  } else if(model_type == "IT"){
-    if(ode_integrator == "rk45"){
-      model_object <- stanmodels$ode_TKTD_varIT
-    }
-    if(ode_integrator == "bdf"){
-      model_object <- stanmodels$ode_TKTD_varIT_bdf
-    }
-  } else if(model_type == "PROPER" && distribution == "loglogistic"){
+  if(distribution == "loglogistic"){
     dataStan$proper_distribution = 1
-    model_object <- stanmodels$ode_TKTD_varPROPER
-  } else if(model_type == "PROPER" && distribution == "lognormal"){
+  }
+  if(distribution == "lognormal"){
     dataStan$proper_distribution = 2
-    model_object <- stanmodels$ode_TKTD_varPROPER
-  } else stop("'model_type' must be 'SD', 'IT' or 'PROPER'. For 'PROPER' models,
-              please add the distribution 'loglogistic' or 'lognormal'.")
+  }
+  
+  if(ode_integrator == "rk45"){
+    if(model_type == "SD"){
+      dataStan$proper_distribution <- NULL
+      model_object <- stanmodels$ode_TKTD_varSD
+    } 
+    if(model_type == "IT"){
+      model_object <- stanmodels$ode_TKTD_varIT
+    } 
+    if(model_type == "PROPER"){
+      model_object <- stanmodels$ode_TKTD_varPROPER
+    }
+  }
+  if(ode_integrator == "bdf"){
+    stop("ode_integrator 'bdf' is not supported in the present version.")
+  }
   
   fit <- rstan::sampling(
     object = model_object,

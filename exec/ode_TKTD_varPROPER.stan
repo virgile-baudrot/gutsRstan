@@ -64,7 +64,6 @@ data {
   int proper_distribution;  
   /* PRIORS */
   
-  
   real kk_meanlog10;
   real kk_sdlog10;
   
