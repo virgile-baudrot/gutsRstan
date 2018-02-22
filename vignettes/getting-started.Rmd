@@ -89,6 +89,16 @@ load(file = "tests/testdata/fit_PROPERlogNormal_diaz.rda")
 load(file = "tests/testdata/fit_PROPERlogLogistic_diaz.rda")
 ```
 
+# Using internal functions for a quick plot
+
+```{r rstanGUTS, cache = TRUE}
+plot_stanguts(fit_SD_diaz)
+plot_stanguts(fit_IT_diaz)
+plot_stanguts(fit_PROPERlogNormal_diaz)
+plot_stanguts(fit_PROPERlogLogistic_diaz)
+```
+
+
 # Using functions from package `rstan`
 
 ```{r stanfit, cache=TRUE}
@@ -154,21 +164,31 @@ plot(survFit_PROPERlogLogistic_diaz)
 The `ppc` function to check posterior prediction
 
 ```{r, cache=TRUE}
-plot(survFit_SD_diaz)
-plot(survFit_IT_diaz)
-plot(survFit_PROPERlogNormal_diaz)
-plot(survFit_PROPERlogLogistic_diaz)
+ppc(survFit_SD_diaz)
+ppc(survFit_IT_diaz)
+ppc(survFit_PROPERlogNormal_diaz)
+ppc(survFit_PROPERlogLogistic_diaz)
 ```
 
 Compared to the target time analysis, TK-TD modelling allows to compute and plot the lethal concentration for any *x* percentage and at any time-point. The chosen time-point can be specified with `time_LCx`, by default the maximal time-point in the dataset is used.
 
 ```{r cstSDLCx, cache=TRUE}
 # LC50 at the maximum time-point:
-LCx_cstSD <- LCx(fit_cstSD, X = 50)
-plot(LCx_cstSD)
+LC50_SD_diaz <- LCx(survFit_SD_diaz, X = 50)
+plot(LCx_SD_diaz)
+# LC30 at the maximum time-4:
+LC30t4_SD_diaz <- LCx(survFit_SD_diaz, X = 50, time_LCx = 4)
+plot(LC30t4_SD_diaz)
 
-# LC50 at time = 2
-LCx(fit_cstSD, X = 50, time_LCx = 2) %>% plot()
-## Note the use of the pipe operator, `%>%`, which is a powerful tool for clearly expressing a sequence of multiple operations.
-## For more information on pipes, see: http://r4ds.had.co.nz/pipes.html
+# IT
+LC50_IT_diaz <- LCx(survFit_IT_diaz, X = 50)
+plot(LC50_IT_diaz)
+
+# PROPER log-Normal
+LC50_PROPERlogNormal_diaz <- LCx(survFit_PROPERlogNormal_diaz, X = 50)
+plot(LC50_PROPERlogNormal_diaz)
+
+# PROPER log-Logistic
+LC50_PROPERlogLogistic_diaz <- LCx(survFit_PROPERlogLogistic_diaz, X = 50)
+plot(LC50_PROPERlogLogistic_diaz)
 ```
