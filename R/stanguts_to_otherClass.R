@@ -202,7 +202,7 @@ stanguts_to_survFit.stanguts <- function(stanguts,
               warnings = warnings,
               model_type = model_type,
               transformed.data = transformed.data,
-              original.data = data)
+              original.data = stanguts$data)
   
   class(OUT) <- c("survFitVarExp","survFit")
   
