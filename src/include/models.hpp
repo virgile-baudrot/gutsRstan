@@ -27,7 +27,7 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_ode_TKTD_varIT");
-    reader.add_event(249, 249, "end", "model_ode_TKTD_varIT");
+    reader.add_event(257, 257, "end", "model_ode_TKTD_varIT");
     return reader;
 }
 
@@ -466,6 +466,7 @@ private:
     double rel_tol;
     double abs_tol;
     int max_num_steps;
+    int proper_distribution;
     double alpha_meanlog10;
     double alpha_sdlog10;
     double beta_minlog10;
@@ -648,6 +649,11 @@ public:
             vals_i__ = context__.vals_i("max_num_steps");
             pos__ = 0;
             max_num_steps = vals_i__[pos__++];
+            context__.validate_dims("data initialization", "proper_distribution", "int", context__.to_vec());
+            proper_distribution = int(0);
+            vals_i__ = context__.vals_i("proper_distribution");
+            pos__ = 0;
+            proper_distribution = vals_i__[pos__++];
             context__.validate_dims("data initialization", "alpha_meanlog10", "double", context__.to_vec());
             alpha_meanlog10 = double(0);
             vals_r__ = context__.vals_r("alpha_meanlog10");
@@ -897,7 +903,14 @@ public:
                             "assigning variable y_hat");
                 for (int i = get_base1(idS_lw,gr,"idS_lw",1); i <= get_base1(idS_up,gr,"idS_up",1); ++i) {
 
-                    stan::math::assign(get_base1_lhs(Psurv_hat,i,"Psurv_hat",1), (exp((-(hb) * get_base1(tNsurv_ode,i,"tNsurv_ode",1))) * (1 - exp(loglogistic_lcdf(max(stan::model::rvalue(y_hat, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), i), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "y_hat")),alpha,beta, pstream__)))));
+                    if (as_bool(logical_eq(proper_distribution,1))) {
+
+                        stan::math::assign(get_base1_lhs(Psurv_hat,i,"Psurv_hat",1), (exp((-(hb) * get_base1(tNsurv_ode,i,"tNsurv_ode",1))) * (1 - exp(loglogistic_lcdf(max(stan::model::rvalue(y_hat, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), i), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "y_hat")),alpha,beta, pstream__)))));
+                    }
+                    if (as_bool(logical_eq(proper_distribution,2))) {
+
+                        stan::math::assign(get_base1_lhs(Psurv_hat,i,"Psurv_hat",1), (exp((-(hb) * get_base1(tNsurv_ode,i,"tNsurv_ode",1))) * (1 - exp(lognormal_cdf_log(max(stan::model::rvalue(y_hat, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), i), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "y_hat")),alpha,beta)))));
+                    }
                     stan::math::assign(get_base1_lhs(Conditional_Psurv_hat,i,"Conditional_Psurv_hat",1), (logical_eq(i,get_base1(idS_lw,gr,"idS_lw",1)) ? stan::math::promote_scalar<T__>(get_base1(Psurv_hat,i,"Psurv_hat",1)) : stan::math::promote_scalar<T__>((get_base1(Psurv_hat,i,"Psurv_hat",1) / get_base1(Psurv_hat,(i - 1),"Psurv_hat",1))) ));
                 }
             }
@@ -1174,7 +1187,14 @@ public:
                             "assigning variable y_hat");
                 for (int i = get_base1(idS_lw,gr,"idS_lw",1); i <= get_base1(idS_up,gr,"idS_up",1); ++i) {
 
-                    stan::math::assign(get_base1_lhs(Psurv_hat,i,"Psurv_hat",1), (exp((-(hb) * get_base1(tNsurv_ode,i,"tNsurv_ode",1))) * (1 - exp(loglogistic_lcdf(max(stan::model::rvalue(y_hat, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), i), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "y_hat")),alpha,beta, pstream__)))));
+                    if (as_bool(logical_eq(proper_distribution,1))) {
+
+                        stan::math::assign(get_base1_lhs(Psurv_hat,i,"Psurv_hat",1), (exp((-(hb) * get_base1(tNsurv_ode,i,"tNsurv_ode",1))) * (1 - exp(loglogistic_lcdf(max(stan::model::rvalue(y_hat, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), i), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "y_hat")),alpha,beta, pstream__)))));
+                    }
+                    if (as_bool(logical_eq(proper_distribution,2))) {
+
+                        stan::math::assign(get_base1_lhs(Psurv_hat,i,"Psurv_hat",1), (exp((-(hb) * get_base1(tNsurv_ode,i,"tNsurv_ode",1))) * (1 - exp(lognormal_cdf_log(max(stan::model::rvalue(y_hat, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), i), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "y_hat")),alpha,beta)))));
+                    }
                     stan::math::assign(get_base1_lhs(Conditional_Psurv_hat,i,"Conditional_Psurv_hat",1), (logical_eq(i,get_base1(idS_lw,gr,"idS_lw",1)) ? stan::math::promote_scalar<double>(get_base1(Psurv_hat,i,"Psurv_hat",1)) : stan::math::promote_scalar<double>((get_base1(Psurv_hat,i,"Psurv_hat",1) / get_base1(Psurv_hat,(i - 1),"Psurv_hat",1))) ));
                 }
             }
@@ -1454,7 +1474,7 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_ode_TKTD_varPROPER");
-    reader.add_event(271, 271, "end", "model_ode_TKTD_varPROPER");
+    reader.add_event(270, 270, "end", "model_ode_TKTD_varPROPER");
     return reader;
 }
 
