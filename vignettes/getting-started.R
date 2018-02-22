@@ -1,17 +1,4 @@
----
-title: "Getting started with rstanTKTD"
-author: "Virgile Baudrot and Sandrine Charles"
-date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Vignette Title}
-  %\VignetteEncoding{UTF-8}
-  %\VignetteEngine{knitr::rmarkdown}
-editor_options: 
-  chunk_output_type: console
----
-
-```{r setup, include = FALSE}
+## ----setup, include = FALSE----------------------------------------------
 knitr::opts_chunk$set(
   fig.width = 7,
   fig.height = 4,
@@ -19,30 +6,13 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-```
 
-
-```{r package, echo=FALSE, results='hide'}
+## ----package, echo=FALSE, results='hide'---------------------------------
 library(rstanTKTD)
 library(rstan)
 library(morse)
-```
 
-The package `rstanTKTD` is devoted to the analysis of data from standard toxicity
-tests. It provides a simple workflow to calibrate GUTS models. This document illustrates
-a typical use of `rstanTKTD` on survival data, which can be followed
-step-by-step to analyze new datasets.
-
-Analysis of results by visualization is possible with the package `morse`.
-
-# TK-TD fitting with GUTS-SD, GUTS-IT, GUTS-PROPER lognormal and GUTS-PROPER loglogistic
-
-## Loading data
-
-Here is a typical session to analyse concentration-dependent time-course data
-using the so-called GUTS models (Jager et al., 2011).
-
-```{r data, cache=TRUE}
+## ----data, cache=TRUE----------------------------------------------------
 # (1) load dataset
 data("data_Diazinon")
 
@@ -55,17 +25,8 @@ plot(survData(data_Diazinon), pool.replicate = FALSE)
 
 # (4) check information on the experimental design
 summary(survData(data_Diazinon))
-```
 
-## Fitting models
-
-- To fit the *Stochastic Death* model, GUTS-SD, we have to specify the `model_type` as `"SD"`.
-- To fit the *Individual Tolerance* model, GUTS-IT, we have to specify the `model_type` as `"IT"`.
-- To fit the general model, GUTS-PROPER, we have to specify the `model_type` as `"PROPER"` and the distribution `lognormal` or `loglogistic`.
-
-Note that the implementation of the `IT`model is done with a loglogistic distribution.
-
-```{r fit, cache=TRUE, echo=TRUE}
+## ----fit, cache=TRUE, echo=TRUE------------------------------------------
 # # OPTION for the number of cores:
 # options(mc.cores = 3)
 #
@@ -89,111 +50,67 @@ load(file = "data_fit/fit_SD_diaz.rda")
 load(file = "data_fit/fit_IT_diaz.rda")
 load(file = "data_fit/fit_PROPERlogNormal_diaz.rda")
 load(file = "data_fit/fit_PROPERlogLogistic_diaz.rda")
-```
 
-# Using internal functions for a quick plot
-
-## Plot of survival rate
-
-```{r rstanGUTS, cache = TRUE}
+## ----rstanGUTS, cache = TRUE---------------------------------------------
 plot_stanguts(fit_SD_diaz)
 plot_stanguts(fit_IT_diaz)
 plot_stanguts(fit_PROPERlogNormal_diaz)
 plot_stanguts(fit_PROPERlogLogistic_diaz)
-```
 
-## Plot of number of survivors
-
-```{r rstanGUTSnumber, cache = TRUE}
+## ----rstanGUTSnumber, cache = TRUE---------------------------------------
 plot_stanguts(fit_SD_diaz, data_type = "Number")
 plot_stanguts(fit_IT_diaz, data_type = "Number")
 plot_stanguts(fit_PROPERlogNormal_diaz, data_type = "Number")
 plot_stanguts(fit_PROPERlogLogistic_diaz, data_type = "Number")
-```
 
-# Using functions from package `rstan`
-
-```{r stanfit, cache=TRUE}
+## ----stanfit, cache=TRUE-------------------------------------------------
 stanfit_SD_diaz <- stanguts_to_stanfit(fit_SD_diaz)
 stanfit_IT_diaz <- stanguts_to_stanfit(fit_IT_diaz)
 stanfit_PROPERlogNormal_diaz <- stanguts_to_stanfit(fit_PROPERlogNormal_diaz)
 stanfit_PROPERlogLogistic_diaz <- stanguts_to_stanfit(fit_PROPERlogLogistic_diaz)
-```
 
-## Pairs
-
-```{r pairs, cache=TRUE}
+## ----pairs, cache=TRUE---------------------------------------------------
 pairs(stanfit_SD_diaz, pars = c("hb_log10", "kd_log10", "z_log10", "kk_log10"))
 pairs(stanfit_IT_diaz, pars = c("hb_log10", "kd_log10", "alpha_log10", "beta_log10"))
 pairs(stanfit_PROPERlogNormal_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
 pairs(stanfit_PROPERlogLogistic_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
-```
 
-## Launch Shinystan
+## ----print, eval=FALSE---------------------------------------------------
+#  library(shinystan)
+#  launch_shinystan(stanfit_SD_diaz)
+#  launch_shinystan(stanfit_IT_diaz)
+#  launch_shinystan(stanfit_PROPERlogNormal_diaz)
+#  launch_shinystan(stanfit_PROPERlogLogistic_diaz)
 
-You can also explore the object with the library `shinystan` :
-
-`launch_shinystan(stanfit_SD_diaz)`
-
-```{r print, eval=FALSE}
-library(shinystan)
-launch_shinystan(stanfit_SD_diaz)
-launch_shinystan(stanfit_IT_diaz)
-launch_shinystan(stanfit_PROPERlogNormal_diaz)
-launch_shinystan(stanfit_PROPERlogLogistic_diaz)
-```
-
-# Using functions from package `morse (version >= 3.1.0)`
-
-First of all, we have to convert the object of class `stanguts` into an object of class `survFit`:
-
-```{r survFit, cache=TRUE}
+## ----survFit, cache=TRUE-------------------------------------------------
 survFit_SD_diaz <- stanguts_to_survFit(fit_SD_diaz)
 survFit_IT_diaz <- stanguts_to_survFit(fit_IT_diaz)
 survFit_PROPERlogNormal_diaz <- stanguts_to_survFit(fit_PROPERlogNormal_diaz)
 survFit_PROPERlogLogistic_diaz <- stanguts_to_survFit(fit_PROPERlogLogistic_diaz)
-```
 
-## Summary
-
-The `summary` function provides parameters estimates as medians and 95\% credible intervals.
-
-```{r survFitsummary, cache=TRUE}
+## ----survFitsummary, cache=TRUE------------------------------------------
 summary(survFit_SD_diaz)
 summary(survFit_IT_diaz)
 summary(survFit_PROPERlogNormal_diaz)
 summary(survFit_PROPERlogLogistic_diaz)
-```
 
-## Plot
-
-The `plot` function provides a representation of the fitting for each replicates
-
-```{r survFitplot, cache=TRUE}
+## ----survFitplot, cache=TRUE---------------------------------------------
 plot(survFit_SD_diaz)
 plot(survFit_IT_diaz)
 
 # PROPER models are not include in morse version < 3.1.0
 # plot(survFit_PROPERlogNormal_diaz)
 # plot(survFit_PROPERlogLogistic_diaz)
-```
 
-## PPC
-
-The `ppc` function to check posterior prediction
-
-```{r, cache=TRUE}
+## ---- cache=TRUE---------------------------------------------------------
 ppc(survFit_SD_diaz)
 ppc(survFit_IT_diaz)
 
 # PROPER models are not include in morse version < 3.1.0
 # ppc(survFit_PROPERlogNormal_diaz)
 # ppc(survFit_PROPERlogLogistic_diaz)
-```
 
-Compared to the target time analysis, TK-TD modelling allows to compute and plot the lethal concentration for any *x* percentage and at any time-point. The chosen time-point can be specified with `time_LCx`, by default the maximal time-point in the dataset is used.
-
-```{r cstSDLCx, cache=TRUE}
+## ----cstSDLCx, cache=TRUE------------------------------------------------
 # LC50 at the maximum time-point:
 LC50_SD_diaz <- LCx(survFit_SD_diaz, X = 50)
 plot(LC50_SD_diaz)
@@ -213,4 +130,4 @@ plot(LC50_IT_diaz)
 # # PROPER log-Logistic
 # LC50_PROPERlogLogistic_diaz <- LCx(survFit_PROPERlogLogistic_diaz, X = 50)
 # plot(LC50_PROPERlogLogistic_diaz)
-```
+
