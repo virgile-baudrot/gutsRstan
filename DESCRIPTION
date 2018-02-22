@@ -2,7 +2,7 @@ Package: rstanTKTD
 Type: Package
 Title: Modelling Tools for Survival Data in Ecotoxicology: General Unified
     Threshold model for Survival (GUTS)
-Version: 1.0
+Version: 0.1.0
 Date: 2017-09-15
 Author:
     Virgile Baudrot [aut],
