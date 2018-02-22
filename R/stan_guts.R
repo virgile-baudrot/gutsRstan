@@ -46,8 +46,8 @@
 #' @param priors_list A list of priors to change the prior automatically
 #'   generated.
 #' @param adapt_delta A double, between 0 and 1, controlling part of sampling 
-#'   algorithms. See \code{control} in function \code{rstan::stan}. The
-#'   default is 0.95.
+#'   algorithms. See \code{control} in function \code{stan} of package \code{rstan}.
+#'   The default is 0.95.
 #' @param chains A positive integer specifying the number of Markov chains.
 #'   The default is 3.
 #' @param iter A positive integer specifying the number of iterations for each
@@ -60,7 +60,8 @@
 #'   and the default is 1000.
 #' @param thin A positive integer specifying the period for saving samples.
 #'   The default is 1, which is usually the recommended value.
-#' @param \dots Further arguments to be passed in \code{rstan::sampling} function 
+#' @param \dots Further arguments to be passed in function \code{sampling} 
+#'   of package \code{rstan}.  
 #' 
 #' 
 #' @return The function returns an object of class \code{stanguts}, which is
