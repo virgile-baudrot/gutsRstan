@@ -1,3 +1,1 @@
-`rstanTKTD` is a library extending the package `morse` (MOdelling 
-Tools for Reproduction and Survival Data in Ecotoxicology) with 
-the Bayesian language Stan.
+`rstanguts` is a library developped for calibration of TKTD (Toxicokinetics-Toxicodynamics) models GUTS (General Unified Threshold models of Survival) with the Bayesian language Stan.
