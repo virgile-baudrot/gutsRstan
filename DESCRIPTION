@@ -1,4 +1,4 @@
-Package: rstanTKTD
+Package: rstanguts
 Type: Package
 Title: Modelling Tools for Survival Data in Ecotoxicology: General Unified
     Threshold model for Survival (GUTS)
@@ -8,7 +8,7 @@ Author:
     Virgile Baudrot [aut],
     Sandrine Charles [aut]
 Maintainer: Virgile Baudrot <virgile.baudrot@posteo.net>
-BugReports: https://github.com/virgile-baudrot/rstanTKTD
+BugReports: https://github.com/virgile-baudrot/rstanguts
 Description: Tools for ecotoxicologists and regulators dedicated to the
     mathematical and statistical modelling of toxicity test data. They use advanced and
     innovative methods for a valuable quantitative environmental risk assessment.

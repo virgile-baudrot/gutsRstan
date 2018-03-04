@@ -1,4 +1,4 @@
-#' @useDynLib rstanTKTD, .registration = TRUE
+#' @useDynLib rstanguts, .registration = TRUE
 #' @import Rcpp
 #' @import rstan
 #' @import dplyr
@@ -10,15 +10,15 @@
 }
 
 .onAttach <- function(...) {
-  rstanarmLib <- dirname(system.file(package = "rstanTKTD"))
-  pkgdesc <- suppressWarnings(utils::packageDescription("rstanTKTD", lib.loc = rstanarmLib))
+  rstanarmLib <- dirname(system.file(package = "rstanguts"))
+  pkgdesc <- suppressWarnings(utils::packageDescription("rstanguts", lib.loc = rstanarmLib))
   if (length(pkgdesc) > 1) {
     builddate <- gsub(';.*$', '', pkgdesc$Packaged)
-    packageStartupMessage(paste("rstanTKTD (Version ", pkgdesc$Version, ", packaged: ", builddate, ")", sep = ""))
+    packageStartupMessage(paste("rstanguts (Version ", pkgdesc$Version, ", packaged: ", builddate, ")", sep = ""))
   }
   packageStartupMessage("- For execution on a local, multicore CPU with excess RAM we recommend calling")
   packageStartupMessage("options(mc.cores = parallel::detectCores()-1)")
-  packageStartupMessage("- In addition to functions provided by rstanTKTD, we recommend using packages:")
+  packageStartupMessage("- In addition to functions provided by rstanguts, we recommend using packages:")
   packageStartupMessage("   - 'bayesplot' for posterior analysis, model checking, and MCMC diagnostics.")
   packageStartupMessage("   - 'loo' for leave-one-out cross-validation (LOO) using Pareto smoothed")
   packageStartupMessage("importance sampling (PSIS), comparison of predictive errors between models and")

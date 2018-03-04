@@ -10,8 +10,8 @@
 #' Bayesian model estimation.
 #'
 #'
-#' @name rstanTKTD-package
-#' @aliases rstanTKTD-package rstanTKTD
+#' @name rstanguts-package
+#' @aliases rstanguts-package rstanguts
 #' @docType package
 #' @author
 #' Virgile Baudrot  <virgile.baudrot@@posteo.net>,

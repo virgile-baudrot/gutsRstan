@@ -1,5 +1,5 @@
 ---
-title: "Getting started with rstanTKTD"
+title: "Getting started with rstanguts"
 author: "Virgile Baudrot and Sandrine Charles"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -23,14 +23,14 @@ knitr::opts_chunk$set(
 
 
 ```{r package, echo=FALSE, results='hide'}
-library(rstanTKTD)
+library(rstanguts)
 library(rstan)
 library(morse)
 ```
 
-The package `rstanTKTD` is devoted to the analysis of data from standard toxicity
+The package `rstanguts` is devoted to the analysis of data from standard toxicity
 tests. It provides a simple workflow to calibrate GUTS models. This document illustrates
-a typical use of `rstanTKTD` on survival data, which can be followed
+a typical use of `rstanguts` on survival data, which can be followed
 step-by-step to analyze new datasets.
 
 Analysis of results by visualization is possible with the package `morse`.
@@ -87,10 +87,10 @@ fit_PROPERlogNormal_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", dist
 ```
 
 ```{r, echo=FALSE}
-save(fit_SD_diaz, file = "vignettes/data_fit/fit_SD_diaz.rda")
-save(fit_IT_diaz, file = "vignettes/data_fit/fit_IT_diaz.rda")
-save(fit_PROPERlogLogistic_diaz, file = "vignettes/data_fit/fit_PROPERlogLogistic_diaz.rda")
-save(fit_PROPERlogNormal_diaz, file = "vignettes/data_fit/fit_PROPERlogNormal_diaz.rda")
+# save(fit_SD_diaz, file = "vignettes/data_fit/fit_SD_diaz.rda")
+# save(fit_IT_diaz, file = "vignettes/data_fit/fit_IT_diaz.rda")
+# save(fit_PROPERlogLogistic_diaz, file = "vignettes/data_fit/fit_PROPERlogLogistic_diaz.rda")
+# save(fit_PROPERlogNormal_diaz, file = "vignettes/data_fit/fit_PROPERlogNormal_diaz.rda")
 
 load(file = "data_fit/fit_SD_diaz.rda")
 load(file = "data_fit/fit_IT_diaz.rda")

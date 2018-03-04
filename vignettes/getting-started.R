@@ -8,7 +8,7 @@ knitr::opts_chunk$set(
 )
 
 ## ----package, echo=FALSE, results='hide'---------------------------------
-library(rstanTKTD)
+library(rstanguts)
 library(rstan)
 library(morse)
 
@@ -26,30 +26,35 @@ plot(survData(data_Diazinon), pool.replicate = FALSE)
 # (4) check information on the experimental design
 summary(survData(data_Diazinon))
 
-## ----fit, cache=TRUE, echo=TRUE------------------------------------------
-# # OPTION for the number of cores:
-# options(mc.cores = 3)
-#
-# # (6) fit the TK-TD model SD
-# fit_SD_diaz <- stan_guts(data_Diazinon, model_type = "SD")
+## ----fit, cache=TRUE, echo=TRUE, eval=FALSE------------------------------
+#  # OPTION for the number of cores:
+#  options(mc.cores = 3)
+#  
+#  # (6) fit the TK-TD model SD
+#  fit_SD_diaz <- stan_guts(data_Diazinon, model_type = "SD")
+#  
+#  # (7) fit the TK-TD model IT
+#  fit_IT_diaz <- stan_guts(data_Diazinon, model_type = "IT")
+#  
+#  # (8) fit the TK-TD model PROPER with distribution 'loglogistic'
+#  fit_PROPERlogLogistic_diaz <- stan_guts(data_Diazinon, model_type = "PROPER")
+#  
+#  # (9) fit the TK-TD model IT with distribution 'lognormal'
+#  fit_ITlogNormal_diaz <- stan_guts(data_Diazinon, model_type = "IT", distribution = "lognormal")
+#  
+#  # (10) fit the TK-TD model PROPER with distribution 'lognormal'
+#  fit_PROPERlogNormal_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", distribution = "lognormal")
+
+## ---- echo=FALSE---------------------------------------------------------
 # save(fit_SD_diaz, file = "vignettes/data_fit/fit_SD_diaz.rda")
-#
-# # (7) fit the TK-TD model IT
-# fit_IT_diaz <- stan_guts(data_Diazinon, model_type = "IT", warmup = 500, chains = 3)
 # save(fit_IT_diaz, file = "vignettes/data_fit/fit_IT_diaz.rda")
-#
-# # (8) fit the TK-TD model PROPER with distribution 'lognormal'
-# fit_PROPERlogNormal_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", distribution = "lognormal")
-# save(fit_PROPERlogNormal_diaz, file = "vignettes/data_fit/fit_PROPERlogNormal_diaz.rda")
-#
-# # (9) fit the TK-TD model PROPER with distribution 'loglogistic'
-# fit_PROPERlogLogistic_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", distribution = "loglogistic")
 # save(fit_PROPERlogLogistic_diaz, file = "vignettes/data_fit/fit_PROPERlogLogistic_diaz.rda")
+# save(fit_PROPERlogNormal_diaz, file = "vignettes/data_fit/fit_PROPERlogNormal_diaz.rda")
 
 load(file = "data_fit/fit_SD_diaz.rda")
 load(file = "data_fit/fit_IT_diaz.rda")
-load(file = "data_fit/fit_PROPERlogNormal_diaz.rda")
 load(file = "data_fit/fit_PROPERlogLogistic_diaz.rda")
+load(file = "data_fit/fit_PROPERlogNormal_diaz.rda")
 
 ## ----rstanGUTS, cache = TRUE---------------------------------------------
 plot_stanguts(fit_SD_diaz)
