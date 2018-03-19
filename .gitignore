@@ -38,4 +38,5 @@ man/*
 
 # Files added:
 # ARTICLE/*
-DATA_SIMULATION/*
+vignettes/getting-started_cache/*
+vignettes/getting-started_files/*
