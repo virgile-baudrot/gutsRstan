@@ -1,0 +1,561 @@
+---
+title: "Comparaison_Publi_Carlo_Albert"
+author: "Virgile Baudrot"
+date: "23 février 2018"
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+---
+
+# Exploration des résultats diazinon Albert et al., 2016
+
+
+```{r}
+##
+# Load Libraries.
+# If not present on system, libraries can be installed using the command `install.packages( <Pack_Name> )`.  See `help( 'install.packages' )`, for more details and additional options.  Reading the packages’ manual pages is highly recommended.  See `help( '<package_name>' )`, for more information about a specific package and the functions it provides.
+#
+library( 'GUTS' )      # v1.0.0.  GUTS package, logliklihood, survival probabilities.
+library( 'adaptMCMC' ) # v1.1.  Function `MCMC()`, Monte Carlo Markov Chain.
+library( 'dfoptim' )   # v2011.8-1.  Function `hjkb()`, optimiser.
+library( 'ggplot2' )   # v2.0.0.  Plotting facilities.
+library( 'grid' )      # Base package.  Use in function `ga_multiplot()`.
+library( 'GGally' )    # v1.0.1  Templates and helpers for ggplot2
+
+library(dplyr)
+library(tidyr)
+```
+
+
+```{r}
+data(diazinon)
+
+guts_object <- list(guts_setup(C = diazinon[["C1"]], Ct = diazinon[["Ct1"]], y = diazinon[["y1"]], yt = diazinon[["yt1"]]),
+                    guts_setup(C = diazinon[["C2"]], Ct = diazinon[["Ct2"]], y = diazinon[["y2"]], yt = diazinon[["yt2"]]),
+                    guts_setup(C = diazinon[["C3"]], Ct = diazinon[["Ct3"]], y = diazinon[["y3"]], yt = diazinon[["yt3"]]) )
+
+logposterior <- function(pars){
+  if(any(is.na(pars), is.infinite(pars), (pars < 0), (pars["kk"] > 30))){
+    return(-Inf)
+  }
+  ret <- sum(sapply(guts_object, function(obj) guts_calc_loglikelihood(obj, pars)))
+  return(ret)
+}
+```
+
+## running GUTS from Albert et al., 2016
+
+Question:
+- Why choosing this starting values? and those lower and upper bounds?
+
+```{r}
+pars_start <- c(0.05, 0.1, 3, 20, 10)
+names(pars_start) <- c('hb', 'ke', 'kk', 'mn', 'sd')
+optim_result <- hjkb(pars_start, logposterior,
+                     lower = rep(0, 5),
+                     upper = c(1, 1, 30, 40, 20),
+                     control = list(maximize = TRUE)
+                     )
+# TAKE around 1 minute
+print(optim_result)
+```
+
+Generate MCMC
+
+```{r}
+mcmc_pars <- optim_result$par
+mcmc_sigma <- diag((mcmc_pars/10)^2 + .Machine$double.eps)
+```
+
+
+```{r, eval=FALSE}
+mcmc_result <- MCMC(p = logposterior, init = mcmc_pars, scale = mcmc_sigma, adapt = 20000, acc.rate = 0.4, n = 50000)
+
+# TAKE around 5 minutes
+save(mcmc_result, file = "mcmc_result_GUTS.rda")
+```
+
+```{r}
+load(file = "mcmc_result_GUTS.rda")
+```
+
+#### Diagnostics plots
+
+CHAINS
+
+```{r}
+df_chains = mcmc_result$samples %>%
+  as.data.frame() %>%
+  gather(parameters, values) %>%
+  group_by(parameters) %>%
+  mutate(iteration = row_number())
+  
+ggplot(data = df_chains) + theme_bw() + 
+  geom_line(aes(x =  iteration, y = values, group = parameters)) +
+  facet_wrap(~ parameters, scales = "free")
+```
+
+PAIRS
+
+```{r}
+ggpairs(as.data.frame(mcmc_result$samples))
+```
+
+DENSITIES
+
+Red vertical lines are initial values of MCMC chains
+
+```{r}
+vinterc = data.frame(value = pars_start,
+                     parameters = names(pars_start))
+
+ggplot(data = df_chains) + theme_bw() + 
+  geom_density(aes(x = values, group = parameters), color = "red") +
+  geom_vline(data = vinterc,  aes(xintercept = value, group = parameters), color = "red") +
+  facet_wrap(~ parameters, scales = "free")
+```
+
+## running GUTS with Bayesian rstan GUTS
+
+```{r}
+library(rstanTKTD)
+data("data_Diazinon")
+```
+
+
+```{r, eval=FALSE}
+fit_PROPERlogNormal_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", distribution = "lognormal")
+```
+
+```{r}
+load(file = "data_fit/fit_PROPERlogNormal_diaz.rda")
+```
+
+
+#### Diagnostic plots
+
+```{r}
+stanfit_PROPERlogNormal_diaz <- stanguts_to_stanfit(fit_PROPERlogNormal_diaz)
+library(morse)
+survFit_PROPERlogNormal_diaz <- stanguts_to_survFit(fit_PROPERlogNormal_diaz)
+```
+
+```{r}
+summary(survFit_PROPERlogNormal_diaz)
+```
+
+CHAINS
+
+```{r}
+library(rstan)
+rstan::traceplot(stanfit_PROPERlogNormal_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
+```
+
+PAIRS
+
+```{r}
+df_mcmc_Stan_pairs = do.call("rbind", survFit_PROPERlogNormal_diaz$mcmc) %>%
+  as.data.frame() %>%
+  mutate(hb = 10^hb_log10, ke = 10^kd_log10, kk = 10^kk_log10,
+         mn = 10^alpha_log10, sd = 10^beta_log10) %>%
+  select(hb, ke, kk, mn, sd, z) 
+
+df_mcmc_Stan_pairs_outZ = select(df_mcmc_Stan_pairs, -z)
+ggpairs(df_mcmc_Stan_pairs_outZ)
+```
+
+DENSITIES
+
+```{r}
+df_mcmc_Stan = df_mcmc_Stan_pairs_outZ %>%
+  gather(parameters, values) %>%
+  group_by(parameters) %>%
+  mutate(iteration = row_number())
+
+ggplot() + theme_bw() + 
+  geom_density(data = df_mcmc_Stan, aes(x = values, group = parameters)) +
+  facet_wrap(~ parameters, scales = "free")
+```
+
+
+## running GUTS from Albert et al., 2016 WITH different initial conditions
+
+We now used as initial condition the median of priors as computed from 'rstanTKTD'.
+
+
+```{r}
+pars_start_IC2 <- c(5.613e-3, 1.772e-2, 3.189e-3, 3.236e1, 1)
+upper_IC2 <- c(1, 7, 20, 110, 100)
+names(pars_start_IC2) <- c('hb', 'ke', 'kk', 'mn', 'sd')
+optim_result_IC2 <- hjkb(pars_start_IC2, logposterior,
+                     lower = rep(0, 5),
+                     upper = upper_IC2,
+                     control = list(maximize = TRUE)
+                     )
+# TAKE around 1 minute
+print(optim_result_IC2)
+```
+
+Generate MCMC
+
+```{r}
+mcmc_pars_IC2 <- optim_result_IC2$par
+mcmc_sigma_IC2 <- diag((mcmc_pars_IC2/10)^2 + .Machine$double.eps)
+```
+
+
+```{r, eval=FALSE}
+mcmc_result_IC2 <- MCMC(p = logposterior,
+                        init = mcmc_pars_IC2,
+                        scale = mcmc_sigma_IC2,
+                        adapt = 20000,
+                        acc.rate = 0.4,
+                        n = 50000)
+
+# TAKE around 5 minutes
+save(mcmc_result_IC2, file = "mcmc_result_GUTS_IC2.rda")
+```
+
+```{r}
+load(file = "mcmc_result_GUTS_IC2.rda")
+```
+
+#### Diagnostics plots
+
+CHAINS
+
+```{r}
+df_chains_IC2 = mcmc_result_IC2$samples %>%
+  as.data.frame() %>%
+  gather(parameters, values) %>%
+  group_by(parameters) %>%
+  mutate(iteration = row_number())
+  
+ggplot(data = df_chains_IC2) + theme_bw() + 
+  geom_line(aes(x =  iteration, y = values, group = parameters)) +
+  facet_wrap(~ parameters, scales = "free")
+```
+
+PAIRS
+
+```{r}
+ggpairs(as.data.frame(mcmc_result_IC2$samples))
+```
+
+DENSITIES
+
+RED: results from Albert et al., 2017
+BLUE: results from Albert et al., 2017 with initial parameters as median of rstanGUTS generated
+BLACK: results from rstanGUTS
+
+
+```{r}
+vinterc_IC2 = data.frame(value = pars_start_IC2,
+                     parameters = names(pars_start_IC2))
+
+ggplot() + theme_bw() + 
+  geom_density(data = df_chains_IC2, aes(x = values, group = parameters), color = "blue") +
+  geom_density(data = df_chains, aes(x = values, group = parameters), color = "red") +
+  geom_density(data = df_mcmc_Stan, aes(x = values, group = parameters)) +
+  geom_vline(data = vinterc_IC2,  aes(xintercept = value, group = parameters), color = "blue") +
+  geom_vline(data = vinterc,  aes(xintercept = value, group = parameters), color = "red") +
+  facet_wrap(~ parameters, scales = "free")
+```
+
+We can Log_scaled the x-axis of previous graph:
+
+```{r}
+ggplot() + theme_bw() +
+  scale_x_log10() +
+  geom_density(data = df_chains_IC2, aes(x = values, group = parameters), color = "blue") +
+  geom_density(data = df_chains, aes(x = values, group = parameters), color = "red") +
+  geom_density(data = df_mcmc_Stan, aes(x = values, group = parameters)) +
+  geom_vline(data = vinterc_IC2,  aes(xintercept = value, group = parameters), color = "blue") +
+  geom_vline(data = vinterc,  aes(xintercept = value, group = parameters), color = "red") +
+  facet_wrap(~ parameters, scales = "free")
+```
+
+### Prediction with package GUTS
+
+```{r}
+data = mcmc_result$samples
+gobjs = guts_object
+sample_size = 2000
+stp <- floor(nrow(data) / sample_size)
+i <- seq(from = stp, by = stp, length.out = sample_size)
+psub <- data[i, ]
+df_gobjs = c()
+replicate = c("R1", "R2", "R3")
+for ( i in 1:length(gobjs) ) {
+	S <- t(apply(psub, 1, function(x) guts_calc_survivalprobs(gobjs[[i]], x)))
+	S_d <- t(apply(S, 1, function(x) -diff(c(x, 0))))
+	
+	df_gobjs[[i]] = data_frame( y = gobjs[[i]]$y,
+	                            yinit = max(gobjs[[i]]$y),
+	                            yt = gobjs[[i]]$yt,
+            	           replicate = rep(replicate[i], length(gobjs[[i]]$y)),
+            	           q50 = apply(S, 2, quantile, probs = 0.5),
+            	           qinf95 = apply(S, 2, quantile, probs = 0.025),
+            	           qsup95 = apply(S, 2, quantile, probs = 0.975))
+}
+df_predict_GUTS_IC1 <- dplyr::bind_rows(df_gobjs)
+
+data = mcmc_result_IC2$samples
+gobjs = guts_object
+sample_size = 2000
+stp <- floor(nrow(data) / sample_size)
+i <- seq(from = stp, by = stp, length.out = sample_size)
+psub <- data[i, ]
+df_gobjs = c()
+replicate = c("R1", "R2", "R3")
+for ( i in 1:length(gobjs) ) {
+	S <- t(apply(psub, 1, function(x) guts_calc_survivalprobs(gobjs[[i]], x)))
+	S_d <- t(apply(S, 1, function(x) -diff(c(x, 0))))
+	
+	df_gobjs[[i]] = data_frame( y = gobjs[[i]]$y,
+	                            yinit = max(gobjs[[i]]$y),
+	                            yt = gobjs[[i]]$yt,
+            	           replicate = rep(replicate[i], length(gobjs[[i]]$y)),
+            	           q50 = apply(S, 2, quantile, probs = 0.5),
+            	           qinf95 = apply(S, 2, quantile, probs = 0.025),
+            	           qsup95 = apply(S, 2, quantile, probs = 0.975))
+}
+df_predict_GUTS_IC2 <- dplyr::bind_rows(df_gobjs)
+```
+
+
+```{r}
+ggplot() + theme_bw() +
+  geom_point(data = df_predict_GUTS_IC1,
+            aes(x = yt, y = y/yinit, group = replicate)) +
+  geom_ribbon(data = df_predict_GUTS_IC1,
+            aes(x = yt, ymin = qinf95, ymax = qsup95, group = replicate), fill = "red", alpha= 0.2) +
+  geom_ribbon(data = df_predict_GUTS_IC2,
+            aes(x = yt, ymin = qinf95, ymax = qsup95, group = replicate), fill = "blue", alpha= 0.2) +
+  geom_line(data = df_predict_GUTS_IC1,
+            aes(x = yt, y = q50, group = replicate), color = "red") +
+  geom_line(data = df_predict_GUTS_IC2,
+            aes(x = yt, y = q50, group = replicate), color = "blue") +
+  facet_wrap(~ replicate)
+```
+
+
+### Generate Stan outpu via GUTS algo
+
+```{r}
+data = df_mcmc_Stan_pairs_outZ %>%
+  mutate(mn = log(mn), sd = log(sd)) %>%
+  # mutate(mn = exp(mn+sd^2/2), sd = sqrt((exp(sd^2-1)*exp(2*mn+sd^2)))) %>%
+  # mutate(mn = log(mn) - 1/2*sd^2, sd = log(1+sd^2/mn^2)) %>%
+  filter(!is.na(mn), !is.na(sd)) %>%
+  filter(sd > 0)
+
+gobjs = guts_object
+sample_size = 2000
+stp <- floor(nrow(data) / sample_size)
+i <- seq(from = stp, by = stp, length.out = sample_size)
+psub <- data[i, ]
+df_gobjs = c()
+replicate = c("R1", "R2", "R3")
+for ( i in 1:length(gobjs) ) {
+	S <- t(apply(psub, 1, function(x) guts_calc_survivalprobs(gobjs[[i]], x)))
+	S_d <- t(apply(S, 1, function(x) -diff(c(x, 0))))
+	
+	df_gobjs[[i]] = data_frame( y = gobjs[[i]]$y,
+	                            yinit = max(gobjs[[i]]$y),
+	                            yt = gobjs[[i]]$yt,
+            	           replicate = rep(replicate[i], length(gobjs[[i]]$y)),
+            	           q50 = apply(S, 2, quantile, probs = 0.5),
+            	           qinf95 = apply(S, 2, quantile, probs = 0.025),
+            	           qsup95 = apply(S, 2, quantile, probs = 0.975))
+}
+df_predict_Stan <- dplyr::bind_rows(df_gobjs)
+```
+
+```{r}
+ggplot() + theme_bw() +
+  geom_point(data = df_predict_GUTS_IC1,
+            aes(x = yt, y = y/yinit, group = replicate)) +
+  geom_ribbon(data = df_predict_GUTS_IC1,
+            aes(x = yt, ymin = qinf95, ymax = qsup95, group = replicate), fill = "red", alpha= 0.2) +
+  geom_ribbon(data = df_predict_GUTS_IC2,
+            aes(x = yt, ymin = qinf95, ymax = qsup95, group = replicate), fill = "blue", alpha= 0.2) +
+  geom_ribbon(data = df_predict_Stan,
+            aes(x = yt, ymin = qinf95, ymax = qsup95, group = replicate), fill = "black", alpha= 0.2) +
+  geom_line(data = df_predict_GUTS_IC1,
+            aes(x = yt, y = q50, group = replicate), color = "red") +
+  geom_line(data = df_predict_GUTS_IC2,
+            aes(x = yt, y = q50, group = replicate), color = "blue") +
+  geom_line(data = df_predict_Stan,
+            aes(x = yt, y = q50, group = replicate)) +
+  facet_wrap(~ replicate)
+```
+
+# FIT of the 3 models
+
+A PROPER model is a SD model with `z` following a distribution. So we can compute a latent_variable `z_latent` as a random variable from every couple `(mn, sd)`.
+
+
+```{r}
+df_Stan = df_mcmc_Stan_pairs
+df_Stan$z_latent = rlnorm(nrow(df_mcmc_Stan_pairs), log(df_mcmc_Stan_pairs$mn), log(df_mcmc_Stan_pairs$sd))
+df_Stan$z_latent = plnorm(0.5, log(df_mcmc_Stan_pairs$mn), log(df_mcmc_Stan_pairs$sd))
+## check densities
+quantile(df_Stan$z, probs = c(0.025, 0.5, 0.975), na.rm = T)
+quantile(df_Stan$z_latent, probs = c(0.025, 0.5, 0.975), na.rm = T)
+
+
+df_GUTS_IC1 = as.data.frame(mcmc_result$samples)
+# df_GUTS_IC1$z_latent = rlnorm(nrow(df_GUTS_IC1), df_GUTS_IC1$mn, df_GUTS_IC1$sd)
+df_GUTS_IC1$z_latent = plnorm(0.5, df_GUTS_IC1$mn, df_GUTS_IC1$sd)
+# df_GUTS_IC1$z_latent = plnorm(0.5, log(df_GUTS_IC1$mn), log(df_GUTS_IC1$sd))
+quantile(df_GUTS_IC1$z_latent, probs = c(0.025, 0.5, 0.975), na.rm = T)
+
+
+df_GUTS_IC2 = as.data.frame(mcmc_result_IC2$samples)
+# df_GUTS_IC2$z_latent = rlnorm(nrow(df_GUTS_IC2), df_GUTS_IC2$mn, df_GUTS_IC2$sd)
+df_GUTS_IC2$z_latent = plnorm(0.5, df_GUTS_IC2$mn, df_GUTS_IC2$sd)
+#df_GUTS_IC2$z_latent = plnorm(0.5, log(df_GUTS_IC2$mn), log(df_GUTS_IC2$sd))
+quantile(df_GUTS_IC2$z_latent, probs = c(0.025, 0.5, 0.975), na.rm = T)
+```
+
+```{r}
+ggplot() + 
+  scale_x_log10() +
+  geom_density(aes(df_Stan$z_latent)) +
+  geom_density(aes(df_Stan$z), linetype = 2) + 
+  geom_density(aes(df_GUTS_IC1$z_latent), color = "red") +
+  geom_density(aes(df_GUTS_IC2$z_latent), color = "blue")
+```
+
+Computing the model
+
+```{r}
+Surv.SD_Cext <- function(Cw, time, kk, kd, z, hb){
+  
+  time.prec = dplyr::lag(time, 1) ; time.prec[1] = time[1] #   time[1] = tprec[1]
+  diff.int = (exp(time %*% t(kd)) * Cw + exp(time.prec %*% t(kd)) * Cw )/2 * (time-time.prec) #OK time[1]-tprec[1] = 0
+  
+  D = kd * exp(-kd %*% t(time)) * t(apply(diff.int,2,cumsum))
+  
+  lambda = kk * pmax(D-z,0) + hb # the pmax function is important here for elementwise maximum with 0 and D[i,j]-z ATTENTION: pmax(0,D) != pmax(D,0)
+  
+  lambda.prec = dplyr::lag(lambda, 1 ) ; lambda.prec[1] = lambda[1]
+  
+  int.lambda =  t(t((lambda + lambda.prec)/2) * (time-time.prec))
+  
+  S <- exp(-t(apply(int.lambda,1,cumsum)))
+  
+  return(S)
+}
+predict_interpolate <- function(x, extend_time = 100){
+  
+  ## data.frame with time
+  
+  df_MinMax <- x %>%
+    dplyr::group_by(replicate) %>%
+    dplyr::summarise(min_time = min(time, na.rm = TRUE),
+                     max_time = max(time, na.rm = TRUE)) %>%
+    dplyr::group_by(replicate) %>%
+    # dplyr::do(data.frame(replicate = .$replicate, time = seq(.$min_time, .$max_time, length = extend_time)))
+    dplyr::do(data_frame(replicate = .$replicate, time = seq(.$min_time, .$max_time, length = extend_time)))
+  
+  x_interpolate <- dplyr::full_join(df_MinMax, x,
+                                    by = c("replicate", "time")) %>%
+    dplyr::group_by(replicate) %>%
+    dplyr::arrange(replicate, time) %>% # organize in replicate and time
+    dplyr::mutate(conc = zoo::na.approx(conc, time, na.rm = FALSE)) %>%
+    # from package zoo : 'na.locf()' carry the last observation forward to replace your NA values.
+    dplyr::mutate(conc = ifelse(is.na(conc),zoo::na.locf(conc),conc) )
+  
+  return(x_interpolate)
+}
+
+data_predict = filter(survData(data_Diazinon), !is.na(conc))
+data_interpolate = predict_interpolate(data_predict,  extend_time = 100) %>%
+        dplyr::arrange(replicate, time)
+
+data_R1 = filter(data_interpolate, replicate == "R1")
+data_R2 = filter(data_interpolate, replicate == "R2")
+data_R3 = filter(data_interpolate, replicate == "R3")
+
+ls_conc = list(data_R1$conc, data_R2$conc, data_R3$conc)
+ls_time = list(data_R1$time, data_R2$time, data_R3$time)
+
+PROPER_model = function(ls_conc, ls_time, kk, kd, z, hb){
+  dtheo = lapply(1:3, function(kit) { # Pour chaque replicat
+      Surv.SD_Cext(Cw = ls_conc[[kit]],
+                   time = ls_time[[kit]],
+                   kk=kk,
+                   kd=kd,
+                   hb=hb,
+                   z=z)
+    })
+  df_theo <- do.call("rbind", lapply(dtheo, t))
+  
+   df_quantile = dplyr::data_frame(
+    time = data_interpolate$time,
+    conc = data_interpolate$conc,
+    replicate = data_interpolate$replicate,
+    q50 = apply(df_theo, 1, quantile, probs = 0.5, na.rm = TRUE),
+    qinf95 = apply(df_theo, 1, quantile, probs = 0.025, na.rm = TRUE),
+    qsup95 = apply(df_theo, 1, quantile, probs = 0.975, na.rm = TRUE)
+  )
+  
+  return(df_quantile)
+}
+
+
+pred_GUTS_IC1 = PROPER_model(ls_conc, ls_time,
+                                kk = df_GUTS_IC1$kk, kd = df_GUTS_IC1$ke,
+                                z = df_GUTS_IC1$z_latent, hb = df_GUTS_IC1$hb)
+pred_GUTS_IC2 = PROPER_model(ls_conc, ls_time,
+                                kk = df_GUTS_IC2$kk, kd = df_GUTS_IC2$ke,
+                                z = df_GUTS_IC2$z_latent, hb = df_GUTS_IC2$hb)
+pred_Stan = PROPER_model(ls_conc, ls_time,
+                            kk = df_Stan$kk, kd = df_Stan$ke,
+                            z = df_Stan$z_latent, hb = df_Stan$hb)
+pred_Stan_zTRUE = PROPER_model(ls_conc, ls_time,
+                            kk = df_Stan$kk, kd = df_Stan$ke,
+                            z = df_Stan$z, hb = df_Stan$hb)
+```
+
+All median with the 95% CI
+
+```{r}
+ggplot() + theme_bw() +
+  geom_point(data = survData(data_Diazinon), aes(x = time, y = Nsurv/Ninit, group = replicate)) +
+  geom_ribbon(data = pred_GUTS_IC1, aes(x = time, ymin = qinf95, ymax = qsup95, group = replicate), fill = "red", alpha = 0.2) +
+  geom_ribbon(data = pred_GUTS_IC2, aes(x = time, ymin = qinf95, ymax = qsup95, group = replicate), fill = "blue", alpha = 0.2) +
+  geom_ribbon(data = pred_Stan_zTRUE, aes(x = time, ymin = qinf95, ymax = qsup95, group = replicate), fill = "black", alpha = 0.2) +
+  geom_line(data = pred_Stan_zTRUE, aes(x = time, y = q50, group = replicate), linetype = 2) +
+  geom_line(data = pred_Stan, aes(x = time, y = q50, group = replicate)) +
+  geom_line(data = pred_GUTS_IC1, aes(x = time, y = q50, group = replicate), color= "red") +
+  geom_line(data = pred_GUTS_IC2, aes(x = time, y = q50, group = replicate), color = "blue") +
+  facet_wrap(~ replicate)
+```
+
+
+# GENERAL PLOT WITH IMPLEMENTED FUNCTIONS
+
+```{r}
+ggplot() + theme_bw() +
+  geom_point(data = survData(data_Diazinon), aes(x = time, y = Nsurv/Ninit, group = replicate)) +
+  geom_ribbon(data = df_predict_GUTS_IC1,
+            aes(x = yt, ymin = qinf95, ymax = qsup95, group = replicate), fill = "red", alpha= 0.2) +
+  geom_ribbon(data = df_predict_GUTS_IC2,
+            aes(x = yt, ymin = qinf95, ymax = qsup95, group = replicate), fill = "blue", alpha= 0.2) +
+  geom_ribbon(data = pred_Stan_zTRUE,
+              aes(x = time, ymin = qinf95, ymax = qsup95, group = replicate), fill = "black", alpha = 0.2) +
+  geom_line(data = df_predict_GUTS_IC1,
+            aes(x = yt, y = q50, group = replicate), color = "red") +
+  geom_line(data = df_predict_GUTS_IC2,
+            aes(x = yt, y = q50, group = replicate), color = "blue") +
+  geom_line(data = pred_Stan_zTRUE,
+            aes(x = time, y = q50, group = replicate)) +
+  facet_wrap(~ replicate)
+```
+
+
