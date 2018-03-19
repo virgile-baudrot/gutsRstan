@@ -127,6 +127,7 @@ stanfit_PROPERlogNormal_diaz <- stanguts_to_stanfit(fit_PROPERlogNormal_diaz)
 stanfit_PROPERlogLogistic_diaz <- stanguts_to_stanfit(fit_PROPERlogLogistic_diaz)
 ```
 
+
 ## Pairs
 
 ```{r pairs, cache=TRUE}
@@ -135,6 +136,11 @@ pairs(stanfit_IT_diaz, pars = c("hb_log10", "kd_log10", "alpha_log10", "beta_log
 pairs(stanfit_PROPERlogNormal_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
 pairs(stanfit_PROPERlogLogistic_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
 ```
+
+```{r}
+pairs(stanfit_PROPERlogNormal_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
+```
+
 
 ## Launch Shinystan
 

@@ -547,15 +547,35 @@ ggplot() + theme_bw() +
             aes(x = yt, ymin = qinf95, ymax = qsup95, group = replicate), fill = "red", alpha= 0.2) +
   geom_ribbon(data = df_predict_GUTS_IC2,
             aes(x = yt, ymin = qinf95, ymax = qsup95, group = replicate), fill = "blue", alpha= 0.2) +
-  geom_ribbon(data = pred_Stan_zTRUE,
-              aes(x = time, ymin = qinf95, ymax = qsup95, group = replicate), fill = "black", alpha = 0.2) +
+  # geom_ribbon(data = pred_Stan_zTRUE,
+  #             aes(x = time, ymin = qinf95, ymax = qsup95, group = replicate), fill = "black", alpha = 0.2) +
   geom_line(data = df_predict_GUTS_IC1,
             aes(x = yt, y = q50, group = replicate), color = "red") +
   geom_line(data = df_predict_GUTS_IC2,
             aes(x = yt, y = q50, group = replicate), color = "blue") +
-  geom_line(data = pred_Stan_zTRUE,
-            aes(x = time, y = q50, group = replicate)) +
+  # geom_line(data = pred_Stan_zTRUE,
+  #           aes(x = time, y = q50, group = replicate)) +
   facet_wrap(~ replicate)
 ```
+
+```{r}
+ggplot() + theme_bw() +
+  labs(x = "Time", y = "Survival rate") +
+  geom_ribbon(data = pred_Stan_zTRUE,
+               aes(x = time, ymin = qinf95, ymax = qsup95, group = replicate), fill = "lightgrey") +
+  geom_ribbon(data = df_predict_GUTS_IC1,
+            aes(x = yt, ymin = qinf95, ymax = qsup95, group = replicate), fill = "red", alpha= 0.1) +
+  geom_ribbon(data = df_predict_GUTS_IC2,
+            aes(x = yt, ymin = qinf95, ymax = qsup95, group = replicate), fill = "blue", alpha= 0.2) +
+  geom_line(data = pred_Stan_zTRUE,
+             aes(x = time, y = q50, group = replicate), color = "orange") +
+  geom_line(data = df_predict_GUTS_IC1,
+            aes(x = yt, y = q50, group = replicate), color = "red") +
+  geom_line(data = df_predict_GUTS_IC2,
+            aes(x = yt, y = q50, group = replicate), color = "blue") +
+  geom_point(data = survData(data_Diazinon), aes(x = time, y = Nsurv/Ninit, group = replicate)) +
+  facet_wrap(~ replicate)
+```
+
 
 
