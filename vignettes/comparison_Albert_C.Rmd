@@ -120,7 +120,7 @@ ggplot(data = df_chains) + theme_bw() +
 ## running GUTS with Bayesian rstan GUTS
 
 ```{r}
-library(rstanTKTD)
+library(rstanguts)
 data("data_Diazinon")
 ```
 
@@ -182,7 +182,7 @@ ggplot() + theme_bw() +
 
 ## running GUTS from Albert et al., 2016 WITH different initial conditions
 
-We now used as initial condition the median of priors as computed from 'rstanTKTD'.
+We now used as initial condition the median of priors as computed from 'rstanguts'.
 
 
 ```{r}
