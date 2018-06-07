@@ -32,88 +32,93 @@ summary(survData(data_Diazinon))
 #  
 #  # (6) fit the TK-TD model SD
 #  fit_SD_diaz <- stan_guts(data_Diazinon, model_type = "SD")
+#  save(fit_SD_diaz, file = "vignettes/data_fit/fit_SD_diaz.rda")
 #  
-#  # (7) fit the TK-TD model IT
+#  # (7) fit the TK-TD model IT (default: with distribution 'loglogistic')
 #  fit_IT_diaz <- stan_guts(data_Diazinon, model_type = "IT")
+#  save(fit_IT_diaz, file = "vignettes/data_fit/fit_IT_diaz.rda")
 #  
-#  # (8) fit the TK-TD model PROPER with distribution 'loglogistic'
-#  fit_PROPERlogLogistic_diaz <- stan_guts(data_Diazinon, model_type = "PROPER")
+#  # (8) fit the TK-TD model IT with distribution 'lognormal'
+#  fit_IT_lN_diaz <- stan_guts(data_Diazinon, model_type = "IT", distribution = "lognormal")
+#  save(fit_IT_lN_diaz, file = "vignettes/data_fit/fit_IT_lN_diaz.rda")
 #  
-#  # (9) fit the TK-TD model IT with distribution 'lognormal'
-#  fit_ITlogNormal_diaz <- stan_guts(data_Diazinon, model_type = "IT", distribution = "lognormal")
+#  # (9) fit the TK-TD model PROPER (default: with distribution 'loglogistic')
+#  fit_PROPER_ll_diaz <- stan_guts(data_Diazinon, model_type = "PROPER")
+#  save(fit_PROPER_ll_diaz, file = "vignettes/data_fit/fit_PROPER_ll_diaz.rda")
 #  
 #  # (10) fit the TK-TD model PROPER with distribution 'lognormal'
-#  fit_PROPERlogNormal_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", distribution = "lognormal")
+#  fit_PROPER_lN_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", distribution = "lognormal")
+#  save(fit_PROPER_lN_diaz, file = "vignettes/data_fit/fit_PROPER_lN_diaz.rda")
 
 ## ---- echo=FALSE---------------------------------------------------------
-# save(fit_SD_diaz, file = "vignettes/data_fit/fit_SD_diaz.rda")
-# save(fit_IT_diaz, file = "vignettes/data_fit/fit_IT_diaz.rda")
-# save(fit_PROPERlogLogistic_diaz, file = "vignettes/data_fit/fit_PROPERlogLogistic_diaz.rda")
-# save(fit_PROPERlogNormal_diaz, file = "vignettes/data_fit/fit_PROPERlogNormal_diaz.rda")
-
 load(file = "data_fit/fit_SD_diaz.rda")
 load(file = "data_fit/fit_IT_diaz.rda")
-load(file = "data_fit/fit_PROPERlogLogistic_diaz.rda")
-load(file = "data_fit/fit_PROPERlogNormal_diaz.rda")
+load(file = "data_fit/fit_IT_lN_diaz.rda")
+load(file = "data_fit/fit_PROPER_ll_diaz.rda")
+load(file = "data_fit/fit_PROPER_lN_diaz.rda")
 
 ## ----rstanGUTS, cache = TRUE---------------------------------------------
 plot_stanguts(fit_SD_diaz)
 plot_stanguts(fit_IT_diaz)
-plot_stanguts(fit_PROPERlogNormal_diaz)
-plot_stanguts(fit_PROPERlogLogistic_diaz)
+plot_stanguts(fit_IT_lN_diaz)
+plot_stanguts(fit_PROPER_lN_diaz)
+plot_stanguts(fit_PROPER_ll_diaz)
 
 ## ----rstanGUTSnumber, cache = TRUE---------------------------------------
 plot_stanguts(fit_SD_diaz, data_type = "Number")
 plot_stanguts(fit_IT_diaz, data_type = "Number")
-plot_stanguts(fit_PROPERlogNormal_diaz, data_type = "Number")
-plot_stanguts(fit_PROPERlogLogistic_diaz, data_type = "Number")
+plot_stanguts(fit_IT_lN_diaz, data_type = "Number")
+plot_stanguts(fit_PROPER_lN_diaz, data_type = "Number")
+plot_stanguts(fit_PROPER_ll_diaz, data_type = "Number")
 
 ## ----stanfit, cache=TRUE-------------------------------------------------
 stanfit_SD_diaz <- stanguts_to_stanfit(fit_SD_diaz)
 stanfit_IT_diaz <- stanguts_to_stanfit(fit_IT_diaz)
-stanfit_PROPERlogNormal_diaz <- stanguts_to_stanfit(fit_PROPERlogNormal_diaz)
-stanfit_PROPERlogLogistic_diaz <- stanguts_to_stanfit(fit_PROPERlogLogistic_diaz)
+stanfit_IT_lN_diaz <- stanguts_to_stanfit(fit_IT_lN_diaz)
+stanfit_PROPER_lN_diaz <- stanguts_to_stanfit(fit_PROPER_lN_diaz)
+stanfit_PROPER_ll_diaz <- stanguts_to_stanfit(fit_PROPER_ll_diaz)
 
 ## ----pairs, cache=TRUE---------------------------------------------------
 pairs(stanfit_SD_diaz, pars = c("hb_log10", "kd_log10", "z_log10", "kk_log10"))
 pairs(stanfit_IT_diaz, pars = c("hb_log10", "kd_log10", "alpha_log10", "beta_log10"))
-pairs(stanfit_PROPERlogNormal_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
-pairs(stanfit_PROPERlogLogistic_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
+pairs(stanfit_IT_lN_diaz, pars = c("hb_log10", "kd_log10", "alpha_log10", "beta_log10"))
+pairs(stanfit_PROPER_lN_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
+pairs(stanfit_PROPER_ll_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
 
 ## ----print, eval=FALSE---------------------------------------------------
 #  library(shinystan)
 #  launch_shinystan(stanfit_SD_diaz)
 #  launch_shinystan(stanfit_IT_diaz)
-#  launch_shinystan(stanfit_PROPERlogNormal_diaz)
-#  launch_shinystan(stanfit_PROPERlogLogistic_diaz)
+#  launch_shinystan(stanfit_PROPER_lN_diaz)
+#  launch_shinystan(stanfit_PROPER_ll_diaz)
 
 ## ----survFit, cache=TRUE-------------------------------------------------
 survFit_SD_diaz <- stanguts_to_survFit(fit_SD_diaz)
 survFit_IT_diaz <- stanguts_to_survFit(fit_IT_diaz)
-survFit_PROPERlogNormal_diaz <- stanguts_to_survFit(fit_PROPERlogNormal_diaz)
-survFit_PROPERlogLogistic_diaz <- stanguts_to_survFit(fit_PROPERlogLogistic_diaz)
+survFit_PROPER_lN_diaz <- stanguts_to_survFit(fit_PROPER_lN_diaz)
+survFit_PROPER_ll_diaz <- stanguts_to_survFit(fit_PROPER_ll_diaz)
 
 ## ----survFitsummary, cache=TRUE------------------------------------------
 summary(survFit_SD_diaz)
 summary(survFit_IT_diaz)
-summary(survFit_PROPERlogNormal_diaz)
-summary(survFit_PROPERlogLogistic_diaz)
+summary(survFit_PROPER_lN_diaz)
+summary(survFit_PROPER_ll_diaz)
 
 ## ----survFitplot, cache=TRUE---------------------------------------------
 plot(survFit_SD_diaz)
 plot(survFit_IT_diaz)
 
 # PROPER models are not include in morse version < 3.1.0
-# plot(survFit_PROPERlogNormal_diaz)
-# plot(survFit_PROPERlogLogistic_diaz)
+# plot(survFit_PROPER_lN_diaz)
+# plot(survFit_PROPER_ll_diaz)
 
 ## ---- cache=TRUE---------------------------------------------------------
 ppc(survFit_SD_diaz)
 ppc(survFit_IT_diaz)
 
 # PROPER models are not include in morse version < 3.1.0
-# ppc(survFit_PROPERlogNormal_diaz)
-# ppc(survFit_PROPERlogLogistic_diaz)
+# ppc(survFit_PROPER_lN_diaz)
+# ppc(survFit_PROPER_ll_diaz)
 
 ## ----cstSDLCx, cache=TRUE------------------------------------------------
 # LC50 at the maximum time-point:
@@ -129,10 +134,10 @@ plot(LC50_IT_diaz)
 
 # PROPER models are not include in morse version < 3.1.0
 # # PROPER log-Normal
-# LC50_PROPERlogNormal_diaz <- LCx(survFit_PROPERlogNormal_diaz, X = 50)
-# plot(LC50_PROPERlogNormal_diaz)
+# LC50_PROPER_lN_diaz <- LCx(survFit_PROPER_lN_diaz, X = 50)
+# plot(LC50_PROPER_lN_diaz)
 # 
 # # PROPER log-Logistic
-# LC50_PROPERlogLogistic_diaz <- LCx(survFit_PROPERlogLogistic_diaz, X = 50)
-# plot(LC50_PROPERlogLogistic_diaz)
+# LC50_PROPER_ll_diaz <- LCx(survFit_PROPER_ll_diaz, X = 50)
+# plot(LC50_PROPER_ll_diaz)
 
