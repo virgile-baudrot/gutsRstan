@@ -1,12 +1,12 @@
-#' MOdelling tools for Survival data in Ecotoxicology
+#' Modelling Tools for Survival Data in Ecotoxicology using the
+#' General Unified Threshold model for Survival (GUTS)
 #'
 #' Provides tools for GUTS modelling.
 #'
-#'
 #' The package currently handles survival data. 
 #'
-#' \strong{Getting started} The package uses the \code{rstan} package
-#' (Stan Development Team, 2018), an R interface to the Stan library for
+#' \strong{Getting started:} the package uses the \code{rstan} package
+#' [Stan Development Team, 2018](rstan), an R interface to the Stan library for
 #' Bayesian model estimation.
 #'
 #'
@@ -15,7 +15,9 @@
 #' @docType package
 #' @author
 #' Virgile Baudrot  <virgile.baudrot@@posteo.net>,
-#' Sandrine Charles <sandrine.charles@@univ-lyon1.fr>,
+#' 
+#' Sandrine Charles <sandrine.charles@@univ-lyon1.fr>
+#' 
 #' 
 #' Maintainer: Virgile Baudrot  <virgile.baudrot@@posteo.net>,
 #' 

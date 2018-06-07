@@ -2,6 +2,17 @@
 (Toxicokinetics-Toxicodynamics) models GUTS (General Unified Threshold models of
    Survival) with the Bayesian language Stan.
 
+### Build status for development version
+
+[![Build Status](https://api.travis-ci.org/virgile-baudrot/rstanguts.svg?branch=master)](https://api.travis-ci.org/virgile-baudrot/rstanguts.svg?branch=master)
+
+## Report a problem
+
+Use the [issue tracker](https://github.com/virgile-baudrot/rstanguts/issues)
+to report a problem.
+
+# How to Install
+
 ## Installing rstanguts on Windows
 
 For further information about the installation, you can have a look at the installation of the `rstan` package:
@@ -102,3 +113,43 @@ fx <- inline::cxxfunction( signature(x = "integer", y = "numeric" ) , '
 
 fx( 2L, 5 ) # should be 10
 ```
+
+# Compilation
+
+## Compilation (for command-line users)
+
+- `cd` to source directory
+- Build from sources (creates vignette and archive)
+  `R CMD build .`
+- Build and install `R CMD INSTALL --build .`
+- Check the package
+  `R CMD check --as-cran rstanguts_X.X.X.tar.gz`
+- Update package description/NAMESPACE
+  - under the R interpreter: `roxygen2::roxygenise(".")`
+- Generate documentation
+  - reference manual: `R CMD Rd2pdf --output=documentation .`
+  - re-build reference manual: `rm documentation | R CMD Rd2pdf --output=documentation .`
+  - vignettes (using the R interpreter):
+    `devtools::document(roclets=c('rd', 'collate', 'namespace', 'vignette'))`
+- Run unit tests
+  - under the R interpreter: `devtools::test()`
+
+## Compilation (with RStudio)
+
+- need `devtools`, `ROxygen2 v5.0.1 or higgher`
+- RStudio builder configuration:
+  - Project Options :
+      enable `Use devtools package...`
+      enable `Generate documentation...`
+      ROxygen options...`:
+        all enable exept `Vignettes` and `Source and binary package build`
+  - vignettes folder must contain only 3 files:
+      biblio.bib
+      modelling.Snw
+      tutorial.Rmd
+  - update Documentation (no vignette, only NAMESPACE and Rd)
+      `Document` or Ctrl + Shift + D
+  - check if the two folder inst and build were created.
+  - build the source file :
+    `More : Build Source Package`
+
