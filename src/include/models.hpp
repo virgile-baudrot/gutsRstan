@@ -27,7 +27,7 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_ode_TKTD_varIT");
-    reader.add_event(257, 257, "end", "model_ode_TKTD_varIT");
+    reader.add_event(262, 262, "end", "model_ode_TKTD_varIT");
     return reader;
 }
 
@@ -1036,6 +1036,7 @@ public:
         names__.push_back("Nsurv_ppc");
         names__.push_back("Nsurv_sim");
         names__.push_back("Nsurv_sim_prec");
+        names__.push_back("log_lik");
     }
 
 
@@ -1071,6 +1072,9 @@ public:
         dims__.resize(0);
         dimss__.push_back(dims__);
         dims__.resize(0);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(n_data_Nsurv);
         dimss__.push_back(dims__);
         dims__.resize(0);
         dims__.push_back(n_data_Nsurv);
@@ -1241,6 +1245,12 @@ public:
             validate_non_negative_index("Nsurv_sim_prec", "n_data_Nsurv", n_data_Nsurv);
             vector<int> Nsurv_sim_prec(n_data_Nsurv, 0);
             stan::math::fill(Nsurv_sim_prec, std::numeric_limits<int>::min());
+            validate_non_negative_index("log_lik", "n_data_Nsurv", n_data_Nsurv);
+            vector_d log_lik(static_cast<Eigen::VectorXd::Index>(n_data_Nsurv));
+            (void) log_lik;  // dummy to suppress unused var warning
+
+            stan::math::initialize(log_lik, std::numeric_limits<double>::quiet_NaN());
+            stan::math::fill(log_lik,DUMMY_VAR__);
 
 
             for (int gr = 1; gr <= n_group; ++gr) {
@@ -1250,6 +1260,7 @@ public:
                     stan::math::assign(get_base1_lhs(Nsurv_ppc,i,"Nsurv_ppc",1), binomial_rng(get_base1(Nprec,i,"Nprec",1),get_base1(Conditional_Psurv_hat,i,"Conditional_Psurv_hat",1), base_rng__));
                     stan::math::assign(get_base1_lhs(Nsurv_sim_prec,i,"Nsurv_sim_prec",1), (logical_eq(i,get_base1(idS_lw,gr,"idS_lw",1)) ? get_base1(Nprec,i,"Nprec",1) : get_base1(Nsurv_sim,(i - 1),"Nsurv_sim",1) ));
                     stan::math::assign(get_base1_lhs(Nsurv_sim,i,"Nsurv_sim",1), binomial_rng(get_base1(Nsurv_sim_prec,i,"Nsurv_sim_prec",1),get_base1(Conditional_Psurv_hat,i,"Conditional_Psurv_hat",1), base_rng__));
+                    stan::math::assign(get_base1_lhs(log_lik,i,"log_lik",1), binomial_log(stan::model::rvalue(Nsurv, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), get_base1(idS_up,gr,"idS_up",1)), stan::model::nil_index_list()), "Nsurv"),stan::model::rvalue(Nprec, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), get_base1(idS_up,gr,"idS_up",1)), stan::model::nil_index_list()), "Nprec"),stan::model::rvalue(Conditional_Psurv_hat, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), get_base1(idS_up,gr,"idS_up",1)), stan::model::nil_index_list()), "Conditional_Psurv_hat")));
                 }
             }
 
@@ -1264,6 +1275,9 @@ public:
             }
             for (int k_0__ = 0; k_0__ < n_data_Nsurv; ++k_0__) {
             vars__.push_back(Nsurv_sim_prec[k_0__]);
+            }
+            for (int k_0__ = 0; k_0__ < n_data_Nsurv; ++k_0__) {
+            vars__.push_back(log_lik[k_0__]);
             }
 
         } catch (const std::exception& e) {
@@ -1367,6 +1381,11 @@ public:
             param_name_stream__ << "Nsurv_sim_prec" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
+        for (int k_0__ = 1; k_0__ <= n_data_Nsurv; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "log_lik" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
     }
 
 
@@ -1441,6 +1460,11 @@ public:
             param_name_stream__ << "Nsurv_sim_prec" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
+        for (int k_0__ = 1; k_0__ <= n_data_Nsurv; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "log_lik" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
     }
 
 }; // model
@@ -1474,7 +1498,7 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_ode_TKTD_varPROPER");
-    reader.add_event(270, 270, "end", "model_ode_TKTD_varPROPER");
+    reader.add_event(275, 275, "end", "model_ode_TKTD_varPROPER");
     return reader;
 }
 
@@ -2526,6 +2550,7 @@ public:
         names__.push_back("Nsurv_ppc");
         names__.push_back("Nsurv_sim");
         names__.push_back("Nsurv_sim_prec");
+        names__.push_back("log_lik");
     }
 
 
@@ -2553,6 +2578,9 @@ public:
         dims__.resize(0);
         dims__.push_back(n_data_Nsurv);
         dims__.push_back(2);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(n_data_Nsurv);
         dimss__.push_back(dims__);
         dims__.resize(0);
         dims__.push_back(n_data_Nsurv);
@@ -2716,6 +2744,12 @@ public:
             validate_non_negative_index("Nsurv_sim_prec", "n_data_Nsurv", n_data_Nsurv);
             vector<int> Nsurv_sim_prec(n_data_Nsurv, 0);
             stan::math::fill(Nsurv_sim_prec, std::numeric_limits<int>::min());
+            validate_non_negative_index("log_lik", "n_data_Nsurv", n_data_Nsurv);
+            vector_d log_lik(static_cast<Eigen::VectorXd::Index>(n_data_Nsurv));
+            (void) log_lik;  // dummy to suppress unused var warning
+
+            stan::math::initialize(log_lik, std::numeric_limits<double>::quiet_NaN());
+            stan::math::fill(log_lik,DUMMY_VAR__);
 
 
             for (int gr = 1; gr <= n_group; ++gr) {
@@ -2725,6 +2759,7 @@ public:
                     stan::math::assign(get_base1_lhs(Nsurv_ppc,i,"Nsurv_ppc",1), binomial_rng(get_base1(Nprec,i,"Nprec",1),get_base1(Conditional_Psurv_hat,i,"Conditional_Psurv_hat",1), base_rng__));
                     stan::math::assign(get_base1_lhs(Nsurv_sim_prec,i,"Nsurv_sim_prec",1), (logical_eq(i,get_base1(idS_lw,gr,"idS_lw",1)) ? get_base1(Nprec,i,"Nprec",1) : get_base1(Nsurv_sim,(i - 1),"Nsurv_sim",1) ));
                     stan::math::assign(get_base1_lhs(Nsurv_sim,i,"Nsurv_sim",1), binomial_rng(get_base1(Nsurv_sim_prec,i,"Nsurv_sim_prec",1),get_base1(Conditional_Psurv_hat,i,"Conditional_Psurv_hat",1), base_rng__));
+                    stan::math::assign(get_base1_lhs(log_lik,i,"log_lik",1), binomial_log(stan::model::rvalue(Nsurv, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), get_base1(idS_up,gr,"idS_up",1)), stan::model::nil_index_list()), "Nsurv"),stan::model::rvalue(Nprec, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), get_base1(idS_up,gr,"idS_up",1)), stan::model::nil_index_list()), "Nprec"),stan::model::rvalue(Conditional_Psurv_hat, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), get_base1(idS_up,gr,"idS_up",1)), stan::model::nil_index_list()), "Conditional_Psurv_hat")));
                 }
             }
 
@@ -2739,6 +2774,9 @@ public:
             }
             for (int k_0__ = 0; k_0__ < n_data_Nsurv; ++k_0__) {
             vars__.push_back(Nsurv_sim_prec[k_0__]);
+            }
+            for (int k_0__ = 0; k_0__ < n_data_Nsurv; ++k_0__) {
+            vars__.push_back(log_lik[k_0__]);
             }
 
         } catch (const std::exception& e) {
@@ -2839,6 +2877,11 @@ public:
             param_name_stream__ << "Nsurv_sim_prec" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
+        for (int k_0__ = 1; k_0__ <= n_data_Nsurv; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "log_lik" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
     }
 
 
@@ -2910,6 +2953,11 @@ public:
             param_name_stream__ << "Nsurv_sim_prec" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
+        for (int k_0__ = 1; k_0__ <= n_data_Nsurv; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "log_lik" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
     }
 
 }; // model
@@ -2943,7 +2991,7 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_ode_TKTD_varSD");
-    reader.add_event(259, 259, "end", "model_ode_TKTD_varSD");
+    reader.add_event(264, 264, "end", "model_ode_TKTD_varSD");
     return reader;
 }
 
@@ -3924,6 +3972,7 @@ public:
         names__.push_back("Nsurv_ppc");
         names__.push_back("Nsurv_sim");
         names__.push_back("Nsurv_sim_prec");
+        names__.push_back("log_lik");
     }
 
 
@@ -3947,6 +3996,9 @@ public:
         dims__.resize(0);
         dims__.push_back(n_data_Nsurv);
         dims__.push_back(2);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(n_data_Nsurv);
         dimss__.push_back(dims__);
         dims__.resize(0);
         dims__.push_back(n_data_Nsurv);
@@ -4106,6 +4158,12 @@ public:
             validate_non_negative_index("Nsurv_sim_prec", "n_data_Nsurv", n_data_Nsurv);
             vector<int> Nsurv_sim_prec(n_data_Nsurv, 0);
             stan::math::fill(Nsurv_sim_prec, std::numeric_limits<int>::min());
+            validate_non_negative_index("log_lik", "n_data_Nsurv", n_data_Nsurv);
+            vector_d log_lik(static_cast<Eigen::VectorXd::Index>(n_data_Nsurv));
+            (void) log_lik;  // dummy to suppress unused var warning
+
+            stan::math::initialize(log_lik, std::numeric_limits<double>::quiet_NaN());
+            stan::math::fill(log_lik,DUMMY_VAR__);
 
 
             for (int gr = 1; gr <= n_group; ++gr) {
@@ -4115,6 +4173,7 @@ public:
                     stan::math::assign(get_base1_lhs(Nsurv_ppc,i,"Nsurv_ppc",1), binomial_rng(get_base1(Nprec,i,"Nprec",1),get_base1(Conditional_Psurv_hat,i,"Conditional_Psurv_hat",1), base_rng__));
                     stan::math::assign(get_base1_lhs(Nsurv_sim_prec,i,"Nsurv_sim_prec",1), (logical_eq(i,get_base1(idS_lw,gr,"idS_lw",1)) ? get_base1(Nprec,i,"Nprec",1) : get_base1(Nsurv_sim,(i - 1),"Nsurv_sim",1) ));
                     stan::math::assign(get_base1_lhs(Nsurv_sim,i,"Nsurv_sim",1), binomial_rng(get_base1(Nsurv_sim_prec,i,"Nsurv_sim_prec",1),get_base1(Conditional_Psurv_hat,i,"Conditional_Psurv_hat",1), base_rng__));
+                    stan::math::assign(get_base1_lhs(log_lik,i,"log_lik",1), binomial_log(stan::model::rvalue(Nsurv, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), get_base1(idS_up,gr,"idS_up",1)), stan::model::nil_index_list()), "Nsurv"),stan::model::rvalue(Nprec, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), get_base1(idS_up,gr,"idS_up",1)), stan::model::nil_index_list()), "Nprec"),stan::model::rvalue(Conditional_Psurv_hat, stan::model::cons_list(stan::model::index_min_max(get_base1(idS_lw,gr,"idS_lw",1), get_base1(idS_up,gr,"idS_up",1)), stan::model::nil_index_list()), "Conditional_Psurv_hat")));
                 }
             }
 
@@ -4129,6 +4188,9 @@ public:
             }
             for (int k_0__ = 0; k_0__ < n_data_Nsurv; ++k_0__) {
             vars__.push_back(Nsurv_sim_prec[k_0__]);
+            }
+            for (int k_0__ = 0; k_0__ < n_data_Nsurv; ++k_0__) {
+            vars__.push_back(log_lik[k_0__]);
             }
 
         } catch (const std::exception& e) {
@@ -4223,6 +4285,11 @@ public:
             param_name_stream__ << "Nsurv_sim_prec" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
+        for (int k_0__ = 1; k_0__ <= n_data_Nsurv; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "log_lik" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
     }
 
 
@@ -4286,6 +4353,11 @@ public:
         for (int k_0__ = 1; k_0__ <= n_data_Nsurv; ++k_0__) {
             param_name_stream__.str(std::string());
             param_name_stream__ << "Nsurv_sim_prec" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_0__ = 1; k_0__ <= n_data_Nsurv; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "log_lik" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
     }
