@@ -122,6 +122,8 @@ fx( 2L, 5 ) # should be 10
 - Build from sources (creates vignette and archive)
   `R CMD build .`
 - Build and install `R CMD INSTALL --build .`
+- Build and install building vignettes with R interpreter:
+  `devtools::install(build_vignettes = TRUE)`
 - Check the package
   `R CMD check --as-cran rstanguts_X.X.X.tar.gz`
 - Update package description/NAMESPACE
@@ -143,13 +145,8 @@ fx( 2L, 5 ) # should be 10
       enable `Generate documentation...`
       ROxygen options...`:
         all enable exept `Vignettes` and `Source and binary package build`
-  - vignettes folder must contain only 3 files:
-      biblio.bib
-      modelling.Snw
-      tutorial.Rmd
   - update Documentation (no vignette, only NAMESPACE and Rd)
       `Document` or Ctrl + Shift + D
-  - check if the two folder inst and build were created.
   - build the source file :
     `More : Build Source Package`
 
