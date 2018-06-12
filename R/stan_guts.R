@@ -112,7 +112,7 @@ stan_guts <- function(data,
                       # specific to stan_guts
                       model_type = NULL,
                       distribution = "loglogistic",
-                      ode_integrator = "rk45", # other is "bdf"
+                      ode_integrator = "rk45", # other is "bdf" not yet implemented
                       rel_tol = 1e-8,
                       abs_tol = 1e-8,
                       max_num_steps = 1e3,
