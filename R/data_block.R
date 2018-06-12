@@ -1,6 +1,4 @@
-#' @import morse
-#' 
-#' @export
+#' Compute data to be used in stan function of GUTS models 
 #' 
 modelDataStan <- function(data, model_type = NULL, ode_control = NULL, priors_list = NULL){
   
@@ -21,7 +19,6 @@ modelDataStan <- function(data, model_type = NULL, ode_control = NULL, priors_li
     priors <- priors_list
   }
   
-    
   ls_OUT_2 <- unlist(list(ls_OUT, priors, ode_control), recursive = FALSE)
     
   return(ls_OUT_2)
