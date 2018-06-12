@@ -83,13 +83,13 @@ plot_stanguts.stanguts <- function(x,
     
   } else stop("'data_type' must be 'Rate' for the survival rate, or 'Number' for the number of survivors")
   
-  plot <- ggplot(data = df_Nsurv) + theme_bw() +
+  plot <- ggplot(data = df_Nsurv) + theme_minimal() +
     scale_y_continuous(limits = y_limits) +
-    geom_pointrange( aes(x = time, y = q50, ymin = qinf95, ymax = qsup95, group = replicate), color = "red", size = 0.2) +
-    geom_line(aes(x = time, y = q50,  group = replicate), color = "red") +
-    geom_ribbon(aes(x= time, ymin = qinf95, ymax = qsup95, group = replicate), fill = "pink", alpha = 0.2)+
+    geom_pointrange( aes(x = time, y = q50, ymin = qinf95, ymax = qsup95, group = replicate), color = "orange", size = 0.2) +
+    geom_line(aes(x = time, y = q50,  group = replicate), color = "orange") +
+    geom_ribbon(aes(x= time, ymin = qinf95, ymax = qsup95, group = replicate), fill = "lightgrey", alpha = 0.2)+
     geom_point( aes(x = time, y = Nsurv, group = replicate) ) +
-    #geom_errorbar( aes(x = time, ymin = qinf95, ymax = qsup95, group = replicate), color = "pink", width = 0.5) +
+    #geom_errorbar( aes(x = time, ymin = qinf95, ymax = qsup95, group = replicate), color = "lightgrey", width = 0.5) +
     facet_wrap(~ replicate)
   
   return(plot)
