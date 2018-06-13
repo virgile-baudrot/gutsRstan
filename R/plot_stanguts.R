@@ -50,12 +50,16 @@ plot_stanguts <- function(x, ...){
 #'
 #' 
 plot_stanguts.stanguts <- function(x,
-                                   data_type = "Rate"){
+                                   data_type = "Rate",
+                                   x_lab = "Time",
+                                   y_lab = NULL,
+                                   title = NULL){
   
   x_stanfit <- x$stanfit
   x_data <- x$dataStan
   
   if(data_type == 'Number'){
+    if(is.null(y_lab)){ y_lab <-"Number of survivors"}
     
     Nsurv_sim <- extract(x_stanfit, pars = 'Nsurv_sim')
     
@@ -69,6 +73,7 @@ plot_stanguts.stanguts <- function(x,
     y_limits = c(0,max(df_Nsurv$Nsurv, df_Nsurv$qsup95))
     
   } else if(data_type == 'Rate'){
+    if(is.null(y_lab)){ y_lab <- "Survival rate"}
     
     Psurv_sim <- extract(x_stanfit, pars = 'Psurv_hat')
     
@@ -84,6 +89,7 @@ plot_stanguts.stanguts <- function(x,
   } else stop("'data_type' must be 'Rate' for the survival rate, or 'Number' for the number of survivors")
   
   plot <- ggplot(data = df_Nsurv) + theme_minimal() +
+    labs(x = x_lab, y = y_lab, title = title) +
     scale_y_continuous(limits = y_limits) +
     geom_pointrange( aes(x = time, y = q50, ymin = qinf95, ymax = qsup95, group = replicate), color = "orange", size = 0.2) +
     geom_line(aes(x = time, y = q50,  group = replicate), color = "orange") +
