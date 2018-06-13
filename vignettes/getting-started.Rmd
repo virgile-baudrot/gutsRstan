@@ -1,5 +1,5 @@
 ---
-title: "Getting started with rstanguts"
+title: "Getting started with gutsRstan"
 author: "Virgile Baudrot and Sandrine Charles"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -23,19 +23,19 @@ knitr::opts_chunk$set(
 
 
 ```{r package, echo=FALSE, results='hide'}
-library(rstanguts)
+library(gutsRstan)
 ```
 
-The package `rstanguts` is devoted to the analysis of data from standard toxicity
+The package `gutsRstan` is devoted to the analysis of data from standard toxicity
 tests. It provides a simple workflow to calibrate GUTS models. This document illustrates
-a typical use of `rstanguts` on survival data, which can be followed
+a typical use of `gutsRstan` on survival data, which can be followed
 step-by-step to analyze new datasets.
 
 Analysis of results by visualization is possible with the package `morse`.
 
 # Bayesian inference of GUTS models
 
-There is only 4 functions in the `rstanguts` package. We want to keep it simple.
+There is only 4 functions in the `gutsRstan` package. We want to keep it simple.
 
 * One function for the Bayesian inference of GUTS models. In this initial version we have only the GUTS-RED models implemented. We hope to implement  all of them as exposed in the [GUTS book](https://leanpub.com/guts_book).
 * One function to quickly plot the fit, compare your data with the fit.
@@ -75,7 +75,7 @@ Both model `IT` and `PROPER` support the `loglogistic` and `lognormal` distribut
 Before fitting models, you can set the number of cores to use when executing the chains in parallel, which defaults to 1 but we recommend setting the mc.cores option to be as many processors as
 the hardware and RAM allow (up to the number of chains).
 
-For instance, within `rstanguts` the default number of chains is 3, so we recommend setting `mc.cores = 3`, if your machine has at least 3 cores which should be the case in a recent computer. 
+For instance, within `gutsRstan` the default number of chains is 3, so we recommend setting `mc.cores = 3`, if your machine has at least 3 cores which should be the case in a recent computer. 
 
 ```{r cores, cache=TRUE, echo=TRUE}
 # OPTION for the number of cores:
@@ -86,7 +86,7 @@ Fitting a data set is easy with the function `stan_guts()`.
 
 The argument `model_type` is required with model type `"SD"`, `"IT"` or `"PROPER"`, there is no default value.
 
-The argument `distribution` matters for `"IT"` or `"PROPER"` models. The default is `"loglogistic"`, and another distribution is `"lognormal"`. If you would like to test some other distribution not implemented, we'll be happy to add any new ones: please let us know by opening a new [github issue](https://github.com/virgile-baudrot/rstanguts/issues).
+The argument `distribution` matters for `"IT"` or `"PROPER"` models. The default is `"loglogistic"`, and another distribution is `"lognormal"`. If you would like to test some other distribution not implemented, we'll be happy to add any new ones: please let us know by opening a new [github issue](https://github.com/virgile-baudrot/gutsRstan/issues).
 
 Here is the ingle line for fitting an `"SD"` model on data set `"data_Diazinon"`. We put all the fit in an object named `fit_SD_diaz`.
 

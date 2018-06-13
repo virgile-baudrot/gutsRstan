@@ -1,4 +1,4 @@
-Package: rstanguts
+Package: gutsRstan
 Type: Package
 Title: Modelling Tools for Survival Data in Ecotoxicology: General Unified
     Threshold model for Survival (GUTS)
@@ -8,7 +8,7 @@ Author:
     Virgile Baudrot [aut],
     Sandrine Charles [aut]
 Maintainer: Virgile Baudrot <virgile.baudrot@posteo.net>
-BugReports: https://github.com/virgile-baudrot/rstanguts
+BugReports: https://github.com/virgile-baudrot/gutsRstan
 Description: Tools for ecotoxicologists and regulators dedicated to the
     mathematical and statistical modelling of survival models from toxicity test data.
 License:GPL (>=2)

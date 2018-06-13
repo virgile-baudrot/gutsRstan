@@ -4,7 +4,7 @@
 #' @title Convert a \code{stanguts} object into a \code{stanfit} object
 #' 
 #' @description Convert a \code{stanguts} object returned by the function
-#' \link[rstanguts]{stan_guts} as provided by Stan package \link{rstan}
+#' \link[gutsRstan]{stan_guts} as provided by Stan package \link{rstan}
 #' 
 #' @param stanguts An object of class \code{stanguts}
 #' @param \dots Further arguments to be passed to generic methods
@@ -29,7 +29,7 @@ stanguts_to_stanfit.stanguts <- function(stanguts, ...){
 #' @title Convert a \code{stanguts} object into a \code{survFit} object
 #' 
 #' @description Convert a \code{stanguts} object returned by the function
-#' \link[rstanguts]{stan_guts} as provided by the function \link[morse]{survFit}
+#' \link[gutsRstan]{stan_guts} as provided by the function \link[morse]{survFit}
 #' 
 #' @param stanguts An object of class \code{stanguts}
 #' 

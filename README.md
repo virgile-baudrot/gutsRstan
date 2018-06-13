@@ -1,19 +1,19 @@
-`rstanguts` is a library developped for calibration of TKTD
+`gutsRstan` is a library developped for calibration of TKTD
 (Toxicokinetics-Toxicodynamics) models GUTS (General Unified Threshold models of
    Survival) with the Bayesian language Stan.
 
 ### Build status for development version
 
-[![Build Status](https://api.travis-ci.org/virgile-baudrot/rstanguts.svg?branch=master)](https://api.travis-ci.org/virgile-baudrot/rstanguts.svg?branch=master)
+[![Build Status](https://api.travis-ci.org/virgile-baudrot/gutsRstan.svg?branch=master)](https://api.travis-ci.org/virgile-baudrot/gutsRstan.svg?branch=master)
 
 ## Report a problem
 
-Use the [issue tracker](https://github.com/virgile-baudrot/rstanguts/issues)
+Use the [issue tracker](https://github.com/virgile-baudrot/gutsRstan/issues)
 to report a problem.
 
 # How to Install
 
-## Installing rstanguts on Windows
+## Installing gutsRstan on Windows
 
 For further information about the installation, you can have a look at the installation of the `rstan` package:
 - [github rstan wiki: installing RStan on Windows](https://github.com/stan-dev/rstan/wiki/Installing-RStan-on-Windows)
@@ -58,26 +58,26 @@ Thread model: win32
 gcc version 4.6.3 20111208 (prerelease) (GCC)
 ```
 
-### Installing rstanguts
+### Installing gutsRstan
 
-From the [github repository of rstanguts](https://github.com/virgile-baudrot/rstanguts), the following command should work:
+From the [github repository of gutsRstan](https://github.com/virgile-baudrot/gutsRstan), the following command should work:
 ```
 install.packages("devtools")
 library("devtools")
-install_github("virgile-baudrot/rstanguts")
+install_github("virgile-baudrot/gutsRstan")
 ```
 
-Or from the source `tar.gz` file available in your download repository (`~\\` is the path to your repository `rstanguts_0.1.0.tar.gz`).
+Or from the source `tar.gz` file available in your download repository (`~\\` is the path to your repository `gutsRstan_0.1.0.tar.gz`).
 ```
-install.packages("~\\rstanguts_0.1.0.tar.gz", repos = NULL, type = "source")
+install.packages("~\\gutsRstan_0.1.0.tar.gz", repos = NULL, type = "source")
 ```
 
 ```
 # Or once the package will be on CRAN
-# install.packages("rstanguts")
+# install.packages("gutsRstan")
 ```
 
-## Installing rstanguts on Mac and Linux
+## Installing gutsRstan on Mac and Linux
 
 For further information about the installation, you can have a look at the installation of the `rstan` package:
 - [github rstan wiki: installing RStan on Mac or Linux](https://github.com/stan-dev/rstan/wiki/Installing-RStan-on-Mac-or-Linux)
@@ -87,21 +87,21 @@ You should install Rcpp from CRAN:
 install.packages("Rcpp")
 ```
 
-Then, you can install `rstanguts` from the [github repository of rstanguts](https://github.com/virgile-baudrot/rstanguts), the following command should work:
+Then, you can install `gutsRstan` from the [github repository of gutsRstan](https://github.com/virgile-baudrot/gutsRstan), the following command should work:
 ```
 install.packages("devtools")
 library("devtools")
-install_github("virgile-baudrot/rstanguts")
+install_github("virgile-baudrot/gutsRstan")
 ```
 
-Or from the source `tar.gz` file available in your download repository (`~//` is the path to your repository `rstanguts_0.1.0.tar.gz`):
+Or from the source `tar.gz` file available in your download repository (`~//` is the path to your repository `gutsRstan_0.1.0.tar.gz`):
 ```
-install.packages("~//rstanguts_0.1.0.tar.gz", repos = NULL, type = "source")
+install.packages("~//gutsRstan_0.1.0.tar.gz", repos = NULL, type = "source")
 ```
 
 ```
 # Or once the package will be on CRAN
-# install.packages("rstanguts")
+# install.packages("gutsRstan")
 ```
 
 
@@ -125,7 +125,7 @@ fx( 2L, 5 ) # should be 10
 - Build and install building vignettes with R interpreter:
   `devtools::install(build_vignettes = TRUE)`
 - Check the package
-  `R CMD check --as-cran rstanguts_X.X.X.tar.gz`
+  `R CMD check --as-cran gutsRstan_X.X.X.tar.gz`
 - Update package description/NAMESPACE
   - under the R interpreter: `roxygen2::roxygenise(".")`
 - Generate documentation
