@@ -1,35 +1,33 @@
-#' Create a plot from a \code{stanguts} object
-#' 
-#' @param x an object used to select a method \code{plot_stanguts}
-#' @param \dots Further arguments to be passed to generic methods
-#' 
-#' @export
-plot_stanguts <- function(x, ...){
-  UseMethod("plot_stanguts")
-}
-
-#' Plotting method for \code{stanguts} objects
+#' @title Plotting method for \code{stanguts} objects
 #'
-#' This is a \code{plot} method for the
-#' \code{stanguts} object.  It plots the fit obtained for each
+#' @description This is a \code{plot} method for the
+#' \code{stanguts} object. It plots the fit obtained for each
 #' profile of chemical compound in the original dataset.
 #'
-#' The fitted curves represent the \strong{estimated survival rate} as a function
+#' @details The fitted curves represent the \strong{estimated survival rate} as a function
 #' of time for each profile of concentration.
 #' The black dots depict the \strong{observed survival
 #' rate} at each time point.
 #' The function plots both 95\% binomial credible intervals for the estimated survival
 #' rate (by default the grey area around the fitted curve).
 #' 
+#' @param stanguts An object of class \code{stanguts}
+#'  
+#' @return An object of class \code{("gg","ggplot")}. See package \link{ggplot2} 
+#'   for further information.
 #' 
-#'
-#' @param x An object of class \code{stanguts}.
+#' @export
+plot_stanguts <- function(stanguts, ...){
+  UseMethod("plot_stanguts")
+}
+
+#' @param stanguts An object of class \code{stanguts}
 #' @param data_type The type of data to plot: either \code{"Rate"} for the
 #'   survival rate, or \code{"Number"} for the number of survivors. The
 #'   default is the survival rate.
-#'  
-#' @return An object of class \code{("gg","ggplot")}. See package \code{ggplot2} 
-#'   for further information..
+#' @param x_lab Label of the x-axis
+#' @param y_lab Label of the y-axis
+#' @param title Title of the graph
 #' 
 #' @examples
 #'
@@ -44,19 +42,19 @@ plot_stanguts <- function(x, ...){
 #' plot_stanguts(fit_SD_diaz)
 #' }
 #' 
+#' @rdname plot_stanguts
 #' @export
 #' 
 #' @import ggplot2
 #'
-#' 
-plot_stanguts.stanguts <- function(x,
+plot_stanguts.stanguts <- function(stanguts,
                                    data_type = "Rate",
                                    x_lab = "Time",
                                    y_lab = NULL,
                                    title = NULL){
   
-  x_stanfit <- x$stanfit
-  x_data <- x$dataStan
+  x_stanfit <- stanguts$stanfit
+  x_data <- stanguts$dataStan
   
   if(data_type == 'Number'){
     if(is.null(y_lab)){ y_lab <-"Number of survivors"}
