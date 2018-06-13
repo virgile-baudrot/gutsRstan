@@ -39,7 +39,7 @@ There is only 4 functions in the `rstanguts` package. We want to keep it simple.
 
 * One function for the Bayesian inference of GUTS models. In this initial version we have only the GUTS-RED models implemented. We hope to implement  all of them as exposed in the [GUTS book](https://leanpub.com/guts_book).
 * One function to quickly plot the fit, compare your data with the fit.
-* Two functions to transform a `stanguts` object into: a `survFit` object to be used with the package [`morse`](https://CRAN.R-project.org/package=morse) ; or a `stanfit` object to use the wonderfull set of packages developped in parallel to the [`rstan`](https://CRAN.R-project.org/package=rstan) package.
+* Two functions to transform a `stanguts` object into: (i) a `survFit` object to be used with the package [`morse`](https://CRAN.R-project.org/package=morse) ; or (ii) a `stanfit` object to use the set of packages developped in parallel to the [`rstan`](https://CRAN.R-project.org/package=rstan) package.
 
 ## Loading data
 
@@ -128,7 +128,8 @@ fit_PROPER_lN_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", distributi
 
 ## Plot of survival rate
 
-```{r rstanGUTS, cache = TRUE}
+```{r stangutsPlotRate, cache = TRUE}
+# Rate of survival as a function of time
 plot_stanguts(fit_SD_diaz)
 plot_stanguts(fit_IT_diaz)
 plot_stanguts(fit_IT_lN_diaz)
@@ -138,7 +139,8 @@ plot_stanguts(fit_PROPER_ll_diaz)
 
 ## Plot of number of survivors
 
-```{r rstanGUTSnumber, cache = TRUE}
+```{r stangutsPlotNumber, cache = TRUE}
+# Number of survivors as a function of time
 plot_stanguts(fit_SD_diaz, data_type = "Number")
 plot_stanguts(fit_IT_diaz, data_type = "Number")
 plot_stanguts(fit_IT_lN_diaz, data_type = "Number")
@@ -271,7 +273,7 @@ plot(LC50_IT_diaz)
 
 ```{r cstSDMFx, cache=TRUE}
 data_4predict <- data.frame(time = 1:10,
-                           conc = runif(10, 0, 130))
+                           conc = runif(10, 0, 13))
 # MF50 at the maximum time-point:
 MF50_SD_diaz <- MFx(survFit_SD_diaz, data_predict = data_4predict, X = 50)
 plot(MF50_SD_diaz)
