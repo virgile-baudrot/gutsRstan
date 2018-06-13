@@ -1,5 +1,5 @@
-#' Compute data to be used in stan function of GUTS models 
-#' 
+# Compute data to be used in stan function of GUTS models 
+# 
 modelDataStan <- function(data, model_type = NULL, ode_control = NULL, priors_list = NULL){
   
   #------------ pool replicate when data is constant:
