@@ -1,9 +1,7 @@
-#' Extract parameters
-#' 
-#' @importfrom dplyr as_data_frame
-#' 
-#' @export
-#' 
+# Extract parameters
+# 
+# @importfrom dplyr as_data_frame
+# 
 extract_MCMCparameters <- function(x){
   # stanEstim <- switch(x$model_type,
   #                     SD =  rstan::extract(x$stanfit, pars = c("kd_log10", "hb_log10", "z_log10", "kk_log10")),
@@ -16,10 +14,10 @@ extract_MCMCparameters <- function(x){
   return(df_stanEstim)
 }
 
-#' Extract parameters name for a \code{stanguts} object
-#' 
-#' @export
-#'  
+# Extract parameters name for a \code{stanguts} object
+# 
+# @export
+#  
 extract_MCMCparameters_name <- function(x){
   
   stanParam <- switch(x$model_type,
@@ -30,37 +28,14 @@ extract_MCMCparameters_name <- function(x){
   return(stanParam)
 }
 
-#' Extract prediction
-#' 
-#' @importfrom dplyr as_data_frame
-#' 
-#' @export
-#' 
+# Extract prediction
+# 
+# @importfrom dplyr as_data_frame
+# 
+# @export
+# 
 extract_MCMCppc <- function(x){
   stanPredict <- rstan::extract(x$stanfit, pars = c("Nsurv_ppc"))
   mat_stanPredict <- stanPredict$Nsurv_ppc
   return(mat_stanPredict)
-}
-
-#' Extract the \code{stanfit} object of a \code{stanguts} object
-#' 
-#' Extract the \code{stanfit} object of a \code{stanguts} object.
-#' 
-#' @param x an object used to select a method
-#' @param \dots Further arguments to be passed to generic methods
-#' 
-#' @export
-#' 
-extract_stanfit <- function(x, ...){
-  UseMethod("extract_stanfit")
-}
-
-#' Extract the \code{stanfit} object of a \code{stanguts} object
-#' 
-#' @param x a,n object of class \code{stanguts}
-#' 
-#' @export
-#'  
-extract_stanfit.stanguts <- function(x){
-  return(x$stanfit)
 }
