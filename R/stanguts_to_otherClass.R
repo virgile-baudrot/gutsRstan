@@ -1,51 +1,53 @@
-#' Create a stanfit from a stanguts object
+###############################################################################
+# stanfit
+##############################################################################
+#' @title Convert a \code{stanguts} object into a \code{stanfit} object
 #' 
-#' @param x an object used to select a method \code{stanguts_to_stanfit}
+#' @description Convert a \code{stanguts} object returned by the function
+#' \link[rstanguts]{stan_guts} as provided by Stan package \link{rstan}
+#' 
+#' @param stanguts An object of class \code{stanguts}
 #' @param \dots Further arguments to be passed to generic methods
 #' 
+#' @return An object of class \code{stanfit}
+#' 
 #' @export
-stanguts_to_stanfit <- function(x, ...){
+stanguts_to_stanfit <- function(object, ...){
   UseMethod("stanguts_to_stanfit")
 }
 
-#' Create a survFit from a stanguts object
-#' 
-#' @param x an object used to select a method \code{stanguts_to_survFit}
-#' @param \dots Further arguments to be passed to generic methods
-#' 
-#' @export
-stanguts_to_survFit <- function(x, ...){
-  UseMethod("stanguts_to_survFit")
-}
-
-
-#' Create a stanfit from a stanguts object
-#' 
-#' Create a stanfit (\code{rstan}) from a stanguts object.
-#'
-#' @param stanguts An object of class \code{stanguts}.
-#' 
-#' @return An object of class \code{stanfit}.
-#'   
-#' @export
-#' 
-
-stanguts_to_stanfit.stanguts <- function(stanguts){
+#' @rdname stanguts_to_stanfit
+#' @export 
+stanguts_to_stanfit.stanguts <- function(stanguts, ...){
   return( stanguts$stanfit )
 }
 
-#' Create a survFit from a stanguts object
+###############################################################################
+# survFit
+###############################################################################
+
+#' @title Convert a \code{stanguts} object into a \code{survFit} object
 #' 
-#' Create a survFit (\code{morse}) from a stanguts object.
-#'
-#' @param stanguts An object of class \code{stanguts}.
+#' @description Convert a \code{stanguts} object returned by the function
+#' \link[rstanguts]{stan_guts} as provided by the function \link[morse]{survFit}
 #' 
-#' @return An object of class \code{survFit}.
-#'   
+#' @param stanguts An object of class \code{stanguts}
+#' 
+#' @return An object of class \code{survFit}
+#' 
 #' @export
+stanguts_to_survFit <- function(stanguts){
+  UseMethod("stanguts_to_survFit")
+}
+#' @param extend_time Number of time points for linear interpolation of external concentration
+#' @param \dots Further arguments to be passed to generic methods
+#' 
+#' @rdname stanguts_to_survFit
+#' @export 
 #'
 stanguts_to_survFit.stanguts <- function(stanguts,
-                                       extend_time = 100){
+                                         extend_time = 100,
+                                         ...){
   
   ##
   ## Define model
