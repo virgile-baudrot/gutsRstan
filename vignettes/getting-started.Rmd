@@ -152,7 +152,7 @@ plot_stanguts(fit_PROPER_ll_diaz, data_type = "Number")
 
 The function `stanguts_to_stanfit()` allow to use the output of the function `rstan_guts()` with packages developped around the R interface tot the [Stan C++ library for Bayesian inference](http://mc-stan.org/)  [`rstan`](https://CRAN.R-project.org/package=rstan), [`shinystan`](https://CRAN.R-project.org/package=shinystan), [`bayesplot`](https://CRAN.R-project.org/package=bayesplot), [`loo`](https://CRAN.R-project.org/package=loo) packages 
 
-```{r stanfit, cache=TRUE}
+```{r stanfit, cache=TRUE, eval=FALSE}
 stanfit_SD_diaz <- stanguts_to_stanfit(fit_SD_diaz)
 stanfit_IT_diaz <- stanguts_to_stanfit(fit_IT_diaz)
 stanfit_IT_lN_diaz <- stanguts_to_stanfit(fit_IT_lN_diaz)
@@ -160,27 +160,23 @@ stanfit_PROPER_lN_diaz <- stanguts_to_stanfit(fit_PROPER_lN_diaz)
 stanfit_PROPER_ll_diaz <- stanguts_to_stanfit(fit_PROPER_ll_diaz)
 ```
 
-## explore the MCMC
+## Explore the MCMC
 
-From the R-package [`rstan`](https://CRAN.R-project.org/package=rstan), there is many function to scrutinized the inference process. A simple one is the mcmc:
-
-```{r mcmcRstan, cache=TRUE}
-library(rstan)
-# mcmc(stanfit_SD_diaz)
-# mcmc(stanfit_IT_diaz)
-# mcmc(stanfit_IT_lN_diaz)
-# mcmc(stanfit_PROPER_lN_diaz)
-# mcmc(stanfit_PROPER_ll_diaz)
-```
-
-Another is the pairs plot:
+From the R-package [`rstan`](https://CRAN.R-project.org/package=rstan), there is many function to scrutinized the inference process. A simple one is the pairs plot:
 
 ```{r pairsRstan, cache=TRUE}
-pairs(stanfit_SD_diaz, pars = c("hb_log10", "kd_log10", "z_log10", "kk_log10"))
-pairs(stanfit_IT_diaz, pars = c("hb_log10", "kd_log10", "alpha_log10", "beta_log10"))
-pairs(stanfit_IT_lN_diaz, pars = c("hb_log10", "kd_log10", "alpha_log10", "beta_log10"))
-pairs(stanfit_PROPER_lN_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
-pairs(stanfit_PROPER_ll_diaz, pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
+## Note: to reduce the size of the vignettes, we do not save previous object from 'stanguts_to_stanfit()' function, so we recall this function in pairs plots.
+# ---
+pairs(stanguts_to_stanfit(fit_SD_diaz),
+      pars = c("hb_log10", "kd_log10", "z_log10", "kk_log10"))
+pairs(stanguts_to_stanfit(fit_IT_diaz),
+      pars = c("hb_log10", "kd_log10", "alpha_log10", "beta_log10"))
+pairs(stanguts_to_stanfit(fit_IT_lN_diaz),
+      pars = c("hb_log10", "kd_log10", "alpha_log10", "beta_log10"))
+pairs(stanguts_to_stanfit(fit_PROPER_lN_diaz),
+      pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
+pairs(stanguts_to_stanfit(fit_PROPER_ll_diaz),
+      pars = c("hb_log10", "kd_log10", "kk_log10", "alpha_log10", "beta_log10"))
 ```
 
 # Explore outputs through Shinystan webpages
@@ -198,9 +194,11 @@ launch_shinystan(stanfit_PROPER_ll_diaz)
 
 # Using functions from package `morse`
 
+At that time, `PROPER` models are not yet handled by the stable CRAN version of the [morse](https://CRAN.R-project.org/package=morse) package. So we only return output for `SD` and `IT` models. 
+
 First of all, we have to convert the object of class `stanguts` into an object of class `survFit`:
 
-```{r survFit, cache=TRUE}
+```{r survFit, cache=TRUE, eval=FALSE}
 survFit_SD_diaz <- stanguts_to_survFit(fit_SD_diaz)
 survFit_IT_diaz <- stanguts_to_survFit(fit_IT_diaz)
 survFit_PROPER_lN_diaz <- stanguts_to_survFit(fit_PROPER_lN_diaz)
@@ -212,10 +210,13 @@ survFit_PROPER_ll_diaz <- stanguts_to_survFit(fit_PROPER_ll_diaz)
 The `summary` function provides parameters estimates as medians and 95\% credible intervals.
 
 ```{r survFitsummary, cache=TRUE}
-summary(survFit_SD_diaz)
-summary(survFit_IT_diaz)
-summary(survFit_PROPER_lN_diaz)
-summary(survFit_PROPER_ll_diaz)
+## Note: to reduce the size of the vignettes, we do not save previous object from 'stanguts_to_survFit()' function, so we recall this function
+# ---
+summary(stanguts_to_survFit(fit_SD_diaz))
+summary(stanguts_to_survFit(fit_IT_diaz))
+# PROPER models are not include in morse version < 3.X.X
+# summary(survFit_PROPER_lN_diaz)
+# summary(survFit_PROPER_ll_diaz)
 ```
 
 ## Plot
@@ -223,8 +224,8 @@ summary(survFit_PROPER_ll_diaz)
 The `plot` function provides a representation of the fitting for each replicates
 
 ```{r survFitplot, cache=TRUE}
-plot(survFit_SD_diaz)
-plot(survFit_IT_diaz)
+plot(stanguts_to_survFit(fit_SD_diaz))
+plot(stanguts_to_survFit(fit_IT_diaz))
 
 # PROPER models are not include in morse version < 3.X.X
 # plot(survFit_PROPER_lN_diaz)
@@ -236,8 +237,8 @@ plot(survFit_IT_diaz)
 The `ppc` function to check posterior prediction
 
 ```{r, cache=TRUE}
-ppc(survFit_SD_diaz)
-ppc(survFit_IT_diaz)
+ppc(stanguts_to_survFit(fit_SD_diaz))
+ppc(stanguts_to_survFit(fit_IT_diaz))
 # PROPER models are not include in morse version < 3.X.X
 # ppc(survFit_PROPER_lN_diaz)
 # ppc(survFit_PROPER_ll_diaz)
@@ -249,14 +250,16 @@ Compared to the target time analysis, TK-TD modelling allows to compute and plot
 
 ```{r cstSDLCx, cache=TRUE}
 # LC50 at the maximum time-point:
-LC50_SD_diaz <- LCx(survFit_SD_diaz, X = 50)
+LC50_SD_diaz <- LCx(stanguts_to_survFit(fit_SD_diaz),
+                    X = 50)
 plot(LC50_SD_diaz)
 # LC30 at the maximum time-4:
-LC30t4_SD_diaz <- LCx(survFit_SD_diaz, X = 30, time_LCx = 4)
+LC30t4_SD_diaz <- LCx(stanguts_to_survFit(fit_SD_diaz),
+                      X = 30, time_LCx = 4)
 plot(LC30t4_SD_diaz)
 
 # IT
-LC50_IT_diaz <- LCx(survFit_IT_diaz, X = 50)
+LC50_IT_diaz <- LCx(stanguts_to_survFit(fit_IT_diaz), X = 50)
 plot(LC50_IT_diaz)
 
 # PROPER models are not include in morse version < 3.X.X
@@ -271,18 +274,27 @@ plot(LC50_IT_diaz)
 
 ## Multiplication Factor 
 
-```{r cstSDMFx, cache=TRUE}
+```{r profileMFx, cache=TRUE}
 data_4predict <- data.frame(time = 1:10,
-                           conc = runif(10, 0, 13))
+                           conc = runif(10, 0, 0.1))
+plot(x = data_4predict$time, y = data_4predict$conc, type = "l",
+     las = 1, xlab = "Time", ylab = "Concentration")
+```
+
+
+```{r cstSDMFx, cache=TRUE}
 # MF50 at the maximum time-point:
-MF50_SD_diaz <- MFx(survFit_SD_diaz, data_predict = data_4predict, X = 50)
+MF50_SD_diaz <- MFx(stanguts_to_survFit(fit_SD_diaz),
+                    data_predict = data_4predict, X = 50)
 plot(MF50_SD_diaz)
 # MF30 at the maximum time-4:
-MF30t4_SD_diaz <- MFx(survFit_SD_diaz, data_predict = data_4predict, X = 30, time_MFx = 4)
+MF30t4_SD_diaz <- MFx(stanguts_to_survFit(fit_SD_diaz),
+                      data_predict = data_4predict, X = 30, time_MFx = 4)
 plot(MF30t4_SD_diaz)
 
 # IT
-MF50_IT_diaz <- MFx(survFit_IT_diaz, data_predict = data_4predict, X = 50)
+MF50_IT_diaz <- MFx(stanguts_to_survFit(fit_IT_diaz),
+                    data_predict = data_4predict, X = 50)
 plot(MF50_IT_diaz)
 
 # PROPER models are not include in morse version < 3.X.X
