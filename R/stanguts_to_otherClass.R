@@ -45,6 +45,9 @@ stanguts_to_survFit <- function(stanguts, ...){
 #' @param extend_time Number of time points for linear interpolation of external concentration
 #'  
 #' @rdname stanguts_to_survFit
+#' @importFrom morse survData priors_survData
+#' @importFrom zoo na.approx na.locf
+#' 
 #' @export 
 #'
 stanguts_to_survFit.stanguts <- function(stanguts,
