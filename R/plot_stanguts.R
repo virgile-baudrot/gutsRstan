@@ -12,7 +12,8 @@
 #' rate (by default the grey area around the fitted curve).
 #' 
 #' @param stanguts An object of class \code{stanguts}
-#'  
+#' @param \dots Further arguments to be passed to generic methods
+#'
 #' @return An object of class \code{("gg","ggplot")}. See package \link{ggplot2} 
 #'   for further information.
 #' 
@@ -20,8 +21,6 @@
 plot_stanguts <- function(stanguts, ...){
   UseMethod("plot_stanguts")
 }
-
-#' @param stanguts An object of class \code{stanguts}
 #' @param data_type The type of data to plot: either \code{"Rate"} for the
 #'   survival rate, or \code{"Number"} for the number of survivors. The
 #'   default is the survival rate.
@@ -51,7 +50,8 @@ plot_stanguts.stanguts <- function(stanguts,
                                    data_type = "Rate",
                                    x_lab = "Time",
                                    y_lab = NULL,
-                                   title = NULL){
+                                   title = NULL,
+                                   ...){
   
   x_stanfit <- stanguts$stanfit
   x_data <- stanguts$dataStan
@@ -68,7 +68,7 @@ plot_stanguts.stanguts <- function(stanguts,
                            qinf95 = apply(Nsurv_sim[[1]], 2, quantile, 0.025),
                            qsup95 = apply(Nsurv_sim[[1]], 2, quantile, 0.975))
     
-    y_limits = c(0,max(df_Nsurv$Nsurv, df_Nsurv$qsup95))
+    y_limits = c(0, max(df_Nsurv$Nsurv, df_Nsurv$qsup95))
     
   } else if(data_type == 'Rate'){
     if(is.null(y_lab)){ y_lab <- "Survival rate"}
@@ -86,12 +86,13 @@ plot_stanguts.stanguts <- function(stanguts,
     
   } else stop("'data_type' must be 'Rate' for the survival rate, or 'Number' for the number of survivors")
   
-  plot <- ggplot(data = df_Nsurv) + theme_minimal() +
+  plot <- ggplot(data = df_Nsurv) +
+    theme_minimal() +
     labs(x = x_lab, y = y_lab, title = title) +
     scale_y_continuous(limits = y_limits) +
     geom_pointrange( aes(x = time, y = q50, ymin = qinf95, ymax = qsup95, group = replicate), color = "orange", size = 0.2) +
-    geom_line(aes(x = time, y = q50,  group = replicate), color = "orange") +
-    geom_ribbon(aes(x= time, ymin = qinf95, ymax = qsup95, group = replicate), fill = "lightgrey", alpha = 0.2)+
+    geom_line( aes(x = time, y = q50,  group = replicate), color = "orange") +
+    geom_ribbon( aes(x= time, ymin = qinf95, ymax = qsup95, group = replicate), fill = "lightgrey", alpha = 0.2)+
     geom_point( aes(x = time, y = Nsurv, group = replicate) ) +
     #geom_errorbar( aes(x = time, ymin = qinf95, ymax = qsup95, group = replicate), color = "lightgrey", width = 0.5) +
     facet_wrap(~ replicate)
