@@ -3,7 +3,8 @@
 utils::globalVariables(c(
   "time", "Nsurv", "conc", "q50", "qinf95", "qsup95",
   "id_all", "quantile", "survFit_TKTD_params",
-  "nbrReplicate_ConcTime"))
+  "nbrReplicate_ConcTime", "time_ID_red", "i_row",
+  "time_ID_long", "time_ID_long", "time_ID_red", "."))
 
 # Extract parameters
 #
