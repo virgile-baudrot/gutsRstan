@@ -1,6 +1,12 @@
+# Ugly hack to get rid of spurious notes in package check, caused by uses
+# of dplyr package. R is such a sad language.
+utils::globalVariables(c(
+  "time", "Nsurv", "conc", "q50", "qinf95", "qsup95",
+  "id_all", "quantile", "survFit_TKTD_params",
+  "nbrReplicate_ConcTime"))
+
 # Extract parameters
-# 
-# @importfrom dplyr as_data_frame
+#
 # 
 extract_MCMCparameters <- function(x){
   # stanEstim <- switch(x$model_type,
