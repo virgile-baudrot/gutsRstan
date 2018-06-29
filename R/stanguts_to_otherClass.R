@@ -36,7 +36,6 @@ stanguts_to_stanfit.stanguts <- function(stanguts, ...){
 #' 
 #' @return An object of class \code{survFit}
 #' 
-#' @import morse
 #' 
 #' @export
 stanguts_to_survFit <- function(stanguts, ...){
