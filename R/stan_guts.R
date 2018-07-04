@@ -1,12 +1,12 @@
-#' Fits a GUTS TK-TD model for survival analysis using Bayesian inference with \code{Stan}
+#' @title Fits a GUTS model for survival analysis using Bayesian inference with \code{Stan}
 #' 
-#' This function estimates the parameters of a TKTD ('SD', 'IT' or 'PROPER')
+#' @description This function estimates the parameters of a GUTS ('SD', 'IT' or 'PROPER')
 #' model for survival analysis using Bayesian inference. In this model,
 #' the survival rate of individuals is modeled as a function of the chemical compound
 #' concentration with a mechanistic description of the effects on survival over
 #' time.
 #' 
-#' 
+#'   
 #' @param data \code{data.frame} containing the following four columns:
 #' \itemize{
 #'   \item \code{replicate}: a vector of class \code{integer} or \code{factor} for replicate
@@ -19,9 +19,9 @@
 #'     alive individuals at each time point for each concentration and each replicate
 #'     (may contain NAs)
 #' }
-#' @param model_type The type of GUTS TK-TD model used: \code{'SD'}, \code{'IT'}
+#' @param model_type The type of GUTS model: \code{'SD'}, \code{'IT'}
 #'   or  \code{'PROPER'}.
-#' @param distribution The type of distribution used for the model \code{'IT'} and
+#' @param distribution The type of distribution used for model \code{'IT'} or
 #'   \code{'PROPER'}: either \code{"loglogistic"} or \code{"lognormal"}. The
 #'   default is \code{"loglogistic"}.
 #' @param ode_integrator A string \code{"rk45"} or \code{"bdf"} specifying
@@ -44,7 +44,7 @@
 #' @param max_num_steps A double providing the maximum number of steps that
 #'   can be used to stop a runaway simulation. This can arise in MCMC when
 #'   a bad jump is taken, particularly during warmup.
-#' @param priors_list A list of priors to change the prior automatically
+#' @param priors_list A list of priors to change the priors automatically
 #'   generated.
 #' @param adapt_delta A double, between 0 and 1, controlling part of sampling 
 #'   algorithms. See \code{control} in function \code{stan} of package \code{rstan}.
@@ -78,14 +78,17 @@
 #' \item{dataStan}{a list of data passed in the Stan model object.}
 #' \item{mcmcInfo}{a table with the number of iterations, chains, warmup and
 #'   the thinning interval.} 
-#' \item{model_type}{the type of TK-TD model used: \code{SD}, \code{IT} or \code{PROPER}.}
-#' \item{distribution}{the type of distribution used for the model
+#' \item{model_type}{the type of GUTS model: \code{SD}, \code{IT} or \code{PROPER}.}
+#' \item{distribution}{the type of distribution used for models \code{IT} or
 #'   \code{PROPER}: either \code{"loglogistic"} or \code{"lognormal"}.}
 #'
 #' @references Jager, T., Albert, C., Preuss, T. G. and Ashauer, R. (2011) 
 #' General unified threshold model of survival-a toxicokinetic-toxicodynamic
-#'  framework for ecotoxicology, \emph{Environmental Science and Technology}, 45, 2529-2540.
+#'  framework for ecotoxicology, \emph{Environmental Science & Technology}, 45, 2529-2540.
 #' 303-314.
+#' 
+#' Jager, T. and Ashauer, R. (2018) Modelling survival under chemical stress.
+#'  A comprehensive guide to the GUTS framework. Version 1.0., \emph{Leanpub}.
 #' 
 #' @examples
 #'

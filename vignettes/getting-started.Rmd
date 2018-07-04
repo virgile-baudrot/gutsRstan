@@ -28,9 +28,9 @@ library(gutsRstan)
 ```
 
 The package `gutsRstan` is devoted to the analysis of data from standard toxicity
-tests. It provides a simple workflow to calibrate GUTS models. This document illustrates
+tests. It provides a simple workflow to calibrate GUTS models (Jager et al., 2011 ; Jager and Ashauer, 2018). This document illustrates
 a typical use of `gutsRstan` on survival data, which can be followed
-step-by-step to analyze new datasets.
+step-by-step to analyze new data.
 
 Analysis of results by visualization is possible with the package `morse`.
 
@@ -38,24 +38,24 @@ Analysis of results by visualization is possible with the package `morse`.
 
 There is only 4 functions in the `gutsRstan` package. We want to keep it simple.
 
-* One function for the Bayesian inference of GUTS models. In this initial version we have only the GUTS-RED models implemented. We hope to implement  all of them as exposed in the [GUTS book](https://leanpub.com/guts_book).
+* One function for the Bayesian inference of GUTS models. In this initial version we only impleted the GUTS-RED versions. We hope to implement  all other verions as exposed in the [GUTS book](https://leanpub.com/guts_book) in the future.
 * One function to quickly plot the fit, compare your data with the fit.
-* Two functions to transform a `stanguts` object into: (i) a `survFit` object to be used with the package [`morse`](https://CRAN.R-project.org/package=morse) ; or (ii) a `stanfit` object to use the set of packages developped in parallel to the [`rstan`](https://CRAN.R-project.org/package=rstan) package.
+* Two functions to transform a `stanguts` object into: (i) a `survFit` object to be used with the [`morse`](https://CRAN.R-project.org/package=morse) package ; or (ii) a `stanfit` object to use the set of functions of the [`rstan`](https://CRAN.R-project.org/package=rstan) package and all other functions from packages developped around the [`rstan`](https://CRAN.R-project.org/package=rstan) environment.
 
 ## Loading data
 
 Here is a typical session to analyse concentration-dependent time-course data
-using the General Unified Threshold model of Survival (GUTS) (see  Jager et al., 2011).
+using the General Unified Threshold model of Survival (GUTS) (see  Jager et al., 2011 or Jager and Ashauer, 2018).
 
 ```{r data, cache=TRUE}
 # (1) load dataset
 data("data_Diazinon")
 ```
 
-The data set can be checked using the package `morse` where a function for GUTS model is also implemented using the JAGS language for Bayesian inference.
+The data set can be checked using the `morse` package where a function for GUTS model is also implemented using the JAGS language for Bayesian inference.
 
 ```{r morseChecking, cache=TRUE}
-## ---- OPTIONAL - using package 'morse'
+## ---- OPTIONAL - using 'morse' package 
 library(morse)
 # (2) : check structure and integrity of the dataset, with the package morse
 survDataCheck(data_Diazinon)
@@ -71,66 +71,65 @@ summary(survData(data_Diazinon))
 * To fit the *Individual Tolerance* model, GUTS-IT, we have to specify the `model_type` as `"IT"`.
 * To fit the general model, GUTS-PROPER, we have to specify the `model_type` as `"PROPER"`.
 
-Both model `IT` and `PROPER` support the `loglogistic` and `lognormal` distribution. The default distribution is `loglogistic`, and the `lognormal` distribution has to be specified with the argument `distribution`.
+Both model `IT` and `PROPER` may be fitted with either the `loglogistic` or the `lognormal` distribution. The default distribution is `loglogistic`. The `lognormal` distribution can be specified with the argument `distribution`.
 
-Before fitting models, you can set the number of cores to use when executing the chains in parallel, which defaults to 1 but we recommend setting the mc.cores option to be as many processors as
+Before fitting models, you can set the number of cores to use when executing the Markov chains in parallel, which defaults to 1 but we recommend setting the mc.cores option to be as many processors as
 the hardware and RAM allow (up to the number of chains).
 
 For instance, within `gutsRstan` the default number of chains is 3, so we recommend setting `mc.cores = 3`, if your machine has at least 3 cores which should be the case in a recent computer. 
 
 ```{r cores, cache=TRUE, echo=TRUE}
-# OPTION for the number of cores:
+# (5) OPTION for the number of cores:
 options(mc.cores = 3)
 ```
 
 Fitting a data set is easy with the function `stan_guts()`.
 
-The argument `model_type` is required with model type `"SD"`, `"IT"` or `"PROPER"`, there is no default value.
+The argument `model_type` is required with `"SD"`, `"IT"` or `"PROPER"`, there is no default value.
 
-The argument `distribution` matters for `"IT"` or `"PROPER"` models. The default is `"loglogistic"`, and another distribution is `"lognormal"`. If you would like to test some other distribution not implemented, we'll be happy to add any new ones: please let us know by opening a new [github issue](https://github.com/virgile-baudrot/gutsRstan/issues).
+The argument `distribution` matters for `"IT"` or `"PROPER"` models. The default is `"loglogistic"`, the other distribution is `"lognormal"`. If you would like to test some other distributions not implemented yet, we would be happy to add any new ones: please let us know by opening a new [github issue](https://github.com/virgile-baudrot/gutsRstan/issues).
 
-Here is the ingle line for fitting an `"SD"` model on data set `"data_Diazinon"`. We put all the fit in an object named `fit_SD_diaz`.
+Here is the single line for fitting an `"SD"` model on data set `"data_Diazinon"`. We put all the outputs in an object named `fit_SD_diaz`.
 
 ```{r fit_SD, cache=TRUE, echo=TRUE}
 # (6-SD) fit the TK-TD model SD
 fit_SD_diaz <- stan_guts(data_Diazinon, model_type = "SD")
 ```
 
-The line for a fit of an `"IT"` model on data set `"data_Diazinon"`. The fit object is named `fit_IT_diaz`.
+Here is the line for a fit of an `"IT"` model on data set `"data_Diazinon"`. The fit object is named `fit_IT_diaz`.
 
 ```{r fit_IT_ll, cache=TRUE, echo=TRUE, eval=FALSE}
-# (6-IT_ll) fit the TK-TD model IT (default: with distribution 'loglogistic')
+# (6-IT_ll) fit the GUTS model IT (default: with distribution 'loglogistic')
 fit_IT_diaz <- stan_guts(data_Diazinon, model_type = "IT")
 ```
 
-Rather than the default `"loglogistic"`, we fit with the `"lognormal"` distribution.
+The `IT` model can also be fitted with the `"lognormal"` distribution.
 
 ```{r fit_IT_ln, cache=TRUE, echo=TRUE, eval=FALSE}
-# (6-IT_ln) fit the TK-TD model IT with distribution 'lognormal'
+# (6-IT_ln) fit the GUTS model IT with distribution 'lognormal'
 fit_IT_lN_diaz <- stan_guts(data_Diazinon, model_type = "IT", distribution = "lognormal")
 ```
 
-The same line for a fit with `"PROPER"` model with the default `"loglogistic"` distribution.
+Here is the same line for a fit with thz `"PROPER"` model and the default `"loglogistic"` distribution.
 
 ```{r fit_PROPER_ll, cache=TRUE, echo=TRUE, eval=FALSE}
-# (6-PROPER_ll) fit the TK-TD model PROPER (default: with distribution 'loglogistic')
+# (6-PROPER_ll) fit the GUTS model PROPER (default with distribution 'loglogistic')
 fit_PROPER_ll_diaz <- stan_guts(data_Diazinon, model_type = "PROPER")
 ```
 
-And finally a fit with `"PROPER"` model using the `"lognormal"` distribution.
+And finally, here is the line for a fit with `"PROPER"` model using the `"lognormal"` distribution.
 
 ```{r fit_PROPER_ln, cache=TRUE, echo=TRUE, eval=FALSE}
-# (6-PROPER_ln) fit the TK-TD model PROPER with distribution 'lognormal'
+# (6-PROPER_ln) fit the GUTS model PROPER with distribution 'lognormal'
 fit_PROPER_lN_diaz <- stan_guts(data_Diazinon, model_type = "PROPER", distribution = "lognormal")
 ```
 
-# Using internal functions for a quick plot
-
+# Plots of fitting results based on internal functions
 
 ## Plot of survival rate
 
 ```{r plotRate, cache = TRUE}
-# Rate of survival as a function of time
+# Survival rate as a function of time
 plot_stanguts(fit_SD_diaz)
 ```
 
@@ -156,11 +155,12 @@ plot_stanguts(fit_PROPER_lN_diaz, data_type = "Number")
 plot_stanguts(fit_PROPER_ll_diaz, data_type = "Number")
 ```
 
-# Using functions from package `rstan`
+# Plots of fitting results based on functions from the `rstan` package.
 
-The function `stanguts_to_stanfit()` allow to use the output of the function `rstan_guts()` with packages developped around the R interface tot the [Stan C++ library for Bayesian inference](http://mc-stan.org/)  [`rstan`](https://CRAN.R-project.org/package=rstan), [`shinystan`](https://CRAN.R-project.org/package=shinystan), [`bayesplot`](https://CRAN.R-project.org/package=bayesplot), [`loo`](https://CRAN.R-project.org/package=loo) packages 
+The function `stanguts_to_stanfit()` allows to use the output of the function `rstan_guts()` with packages developped around the R interface to the [Stan C++ library for Bayesian inference](http://mc-stan.org/)   [`rstan`](https://CRAN.R-project.org/package=rstan), [`shinystan`](https://CRAN.R-project.org/package=shinystan), [`bayesplot`](https://CRAN.R-project.org/package=bayesplot), [`loo`](https://CRAN.R-project.org/package=loo) packages 
 
 ```{r stanfit, cache=TRUE, eval=FALSE}
+# Built of stanfit object
 stanfit_SD_diaz <- stanguts_to_stanfit(fit_SD_diaz)
 stanfit_IT_diaz <- stanguts_to_stanfit(fit_IT_diaz)
 stanfit_IT_lN_diaz <- stanguts_to_stanfit(fit_IT_lN_diaz)
@@ -174,10 +174,10 @@ library(rstan)
 
 ## Explore the MCMC
 
-From the R-package [`rstan`](https://CRAN.R-project.org/package=rstan), there is many function to scrutinized the inference process. A simple one is the pairs plot:
+From the R-package [`rstan`](https://CRAN.R-project.org/package=rstan), there are many functions to scrutinize the inference process. A simple one is the pairs plot:
 
 ```{r pairsRstan, cache=TRUE}
-## Note: to reduce the size of the vignettes, we do not save previous object from 'stanguts_to_stanfit()' function, so we recall this function in pairs plots.
+## Note: to reduce the size of the vignettes, we did not saved previous objects from the 'stanguts_to_stanfit()' function, so we recall this function in pairs plots.
 # ---
 pairs(stanguts_to_stanfit(fit_SD_diaz),
       pars = c("hb_log10", "kd_log10", "z_log10", "kk_log10"))
@@ -197,7 +197,7 @@ pairs(stanguts_to_stanfit(fit_PROPER_ll_diaz),
 
 # Explore outputs through Shinystan webpages
 
-You can also explore the object with the R-package [`shinystan`](https://CRAN.R-project.org/package=shinystan) :
+You can also explore the fitting results with the R-package [`shinystan`](https://CRAN.R-project.org/package=shinystan) :
 
 
 ```{r print, eval=FALSE}
@@ -208,7 +208,7 @@ launch_shinystan(stanfit_PROPER_lN_diaz)
 launch_shinystan(stanfit_PROPER_ll_diaz)
 ```
 
-# Using functions from package `morse`
+# Plots of fitting results based on functions from package `morse`
 
 At that time, `PROPER` models are not yet handled by the stable CRAN version of the [morse](https://CRAN.R-project.org/package=morse) package. So we only return output for `SD` and `IT` models. 
 
@@ -217,8 +217,6 @@ First of all, we have to convert the object of class `stanguts` into an object o
 ```{r survFit, cache=TRUE, eval=FALSE}
 survFit_SD_diaz <- stanguts_to_survFit(fit_SD_diaz)
 survFit_IT_diaz <- stanguts_to_survFit(fit_IT_diaz)
-survFit_PROPER_lN_diaz <- stanguts_to_survFit(fit_PROPER_lN_diaz)
-survFit_PROPER_ll_diaz <- stanguts_to_survFit(fit_PROPER_ll_diaz)
 ```
 
 ## Summary
@@ -227,76 +225,53 @@ survFit_PROPER_ll_diaz <- stanguts_to_survFit(fit_PROPER_ll_diaz)
 library(morse)
 ```
 
-The `summary` function provides parameters estimates as medians and 95\% credible intervals.
+The `summary` function provides parameter estimates as medians and 95\% credible intervals.
 
 ```{r survFitsummary, cache=TRUE}
-## Note: to reduce the size of the vignettes, we do not save previous object from 'stanguts_to_survFit()' function, so we recall this function
+## Note: to reduce the size of the vignettes, we did not saved previous object from 'stanguts_to_survFit()' function, so we recall this function
 # ---
 summary(stanguts_to_survFit(fit_SD_diaz))
 # summary(stanguts_to_survFit(fit_IT_diaz))
-# PROPER models are not include in morse version < 3.X.X
-# summary(survFit_PROPER_lN_diaz)
-# summary(survFit_PROPER_ll_diaz)
 ```
 
 ## Plot
 
-The `plot` function provides a representation of the fitting for each replicates
+The `plot` function provides a representation of the fitting results for each replicate
 
 ```{r survFitplot, cache=TRUE}
 # plot(stanguts_to_survFit(fit_SD_diaz))
 # plot(stanguts_to_survFit(fit_IT_diaz))
-
-# PROPER models are not include in morse version < 3.X.X
-# plot(survFit_PROPER_lN_diaz)
-# plot(survFit_PROPER_ll_diaz)
 ```
 
 ## PPC
 
-The `ppc` function to check posterior prediction
+The `ppc` function allows to check posterior predictions
 
 ```{r survFitppc, cache=TRUE}
 ppc(stanguts_to_survFit(fit_SD_diaz))
 # ppc(stanguts_to_survFit(fit_IT_diaz))
-# PROPER models are not include in morse version < 3.X.X
-# ppc(survFit_PROPER_lN_diaz)
-# ppc(survFit_PROPER_ll_diaz)
 ```
 
-## Lethal Concentration 
+## Lethal concentration prediction 
 
-Compared to the target time analysis, TK-TD modelling allows to compute and plot the lethal concentration for any *x* percentage and at any time-point. The chosen time-point can be specified with `time_LCx`, by default the maximal time-point in the dataset is used.
+Compared to the target time analysis, TKTD modelling allows to compute and plot the lethal concentration for any *x* percentage and at any time-point. The chosen time-point can be specified with `time_LCx` ; by default the maximal time-point in the data set is used.
 
 ```{r cstSDLCx, cache=TRUE}
-# LC50 at the maximum time-point:
+# LC50 at the final time-point:
 LC50_SD_diaz <- LCx(stanguts_to_survFit(fit_SD_diaz),
                     X = 50)
 plot(LC50_SD_diaz)
-# LC30 at the maximum time-4:
+# LC30 at the time 4:
 LC30t4_SD_diaz <- LCx(stanguts_to_survFit(fit_SD_diaz),
                       X = 30, time_LCx = 4)
 plot(LC30t4_SD_diaz)
-
-# IT
-# LC50_IT_diaz <- LCx(stanguts_to_survFit(fit_IT_diaz), X = 50)
-# plot(LC50_IT_diaz)
-
-# PROPER models are not include in morse version < 3.X.X
-# # PROPER log-Normal
-# LC50_PROPER_lN_diaz <- LCx(survFit_PROPER_lN_diaz, X = 50)
-# plot(LC50_PROPER_lN_diaz)
-# 
-# # PROPER log-Logistic
-# LC50_PROPER_ll_diaz <- LCx(survFit_PROPER_ll_diaz, X = 50)
-# plot(LC50_PROPER_ll_diaz)
 ```
 
 ## Multiplication Factor 
 
 ```{r profileMFx, cache=TRUE}
-data_4predict <- data.frame(time = 1:10,
-                           conc = runif(10, 0, 0.1))
+data_4predict <- data.frame(time = c(1, 2, 2.1, 5.9, 6, 7, 7.1, 10),
+                           conc = c(10, 10, 0, 0, 10, 10, 0, 0))
 plot(x = data_4predict$time, y = data_4predict$conc, type = "l",
      las = 1, xlab = "Time", ylab = "Concentration")
 ```
@@ -307,22 +282,15 @@ plot(x = data_4predict$time, y = data_4predict$conc, type = "l",
 MF50_SD_diaz <- MFx(stanguts_to_survFit(fit_SD_diaz),
                     data_predict = data_4predict, X = 50)
 plot(MF50_SD_diaz)
-# MF30 at the maximum time-4:
-MF30t4_SD_diaz <- MFx(stanguts_to_survFit(fit_SD_diaz),
-                      data_predict = data_4predict, X = 30, time_MFx = 4)
-plot(MF30t4_SD_diaz)
-
-# IT
-# MF50_IT_diaz <- MFx(stanguts_to_survFit(fit_IT_diaz),
-#                     data_predict = data_4predict, X = 50)
-# plot(MF50_IT_diaz)
-
-# PROPER models are not include in morse version < 3.X.X
-# # PROPER log-Normal
-# MF50_PROPER_lN_diaz <- MFx(survFit_PROPER_lN_diaz, X = 50)
-# plot(MF50_PROPER_lN_diaz)
-#
-# # PROPER log-Logistic
-# MF50_PROPER_ll_diaz <- MFx(survFit_PROPER_ll_diaz, X = 50)
-# plot(MF50_PROPER_ll_diaz)
+# MF30 at the maximum time 20:
+MF30t20_SD_diaz <- MFx(stanguts_to_survFit(fit_SD_diaz),
+                      data_predict = data_4predict,
+                      X = 30, time_MFx = 7)
+plot(MF30t20_SD_diaz)
 ```
+
+# References
+
+Jager, T., Albert, C., Preuss, T. G. and Ashauer, R. (2011) *General unified threshold model of survival - a toxicokinetic-toxicodynamic framework for ecotoxicology*, Environmental Science & Technology, 45, 2529-2540.
+ 
+Jager, T. and Ashauer, R. (2018) *Modelling survival under chemical stress. A comprehensive guide to the GUTS framework*. Version 1.0., *Leanpub*.

@@ -30,6 +30,7 @@ stanguts_to_stanfit.stanguts <- function(stanguts, ...){
 #' 
 #' @description Convert a \code{stanguts} object returned by the function
 #' \link[gutsRstan]{stan_guts} as provided by the function \link[morse]{survFit}
+#' from package \code{morse}.
 #' 
 #' @param stanguts An object of class \code{stanguts}
 #' @param \dots Further arguments to be passed to generic methods
@@ -41,7 +42,8 @@ stanguts_to_stanfit.stanguts <- function(stanguts, ...){
 stanguts_to_survFit <- function(stanguts, ...){
   UseMethod("stanguts_to_survFit")
 }
-#' @param extend_time Number of time points for linear interpolation of external concentration
+#' @param extend_time Number of time points for linear interpolation of
+#' exposure concentration
 #'  
 #' @rdname stanguts_to_survFit
 #' @importFrom morse survData priors_survData

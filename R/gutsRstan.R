@@ -1,7 +1,7 @@
 #' Modelling Tools for Survival Data in Ecotoxicology using the
 #' General Unified Threshold model for Survival (GUTS)
 #'
-#' Provides tools for GUTS modelling.
+#' Provides tools for GUTS modelling under a Bayesian framework.
 #'
 #' The package currently handles survival data. 
 #'
@@ -10,8 +10,8 @@
 #' Bayesian model estimation.
 #'
 #'
-#' @name rstanguts-package
-#' @aliases rstanguts-package rstanguts
+#' @name gutsrstan-package
+#' @aliases gutsRstan-package gutsRstan
 #' @docType package
 #' @author
 #' Virgile Baudrot  <virgile.baudrot@@posteo.net>,
@@ -24,7 +24,7 @@
 NULL
 
 #' Survival datasets for \emph{Gammarus pulex} exposed to
-#' varying concentration of Diazinon during 21 days.
+#' time-varying concentration of Diazinon during 21 days.
 #'
 #' Three profiles of concentration were tested. Each replicate contained 70
 #' organisms. Survival was monitored at different time points.
@@ -45,6 +45,6 @@ NULL
 #' @references Ashauer, R., Hintermeister, A., Caravatti, I., Kretschmann, A.,
 #'  and Escher, B.I. (2010) Toxicokinetic and toxicodynamic modeling explains
 #'  carry-over toxicity from exposure to diazinon by slow organism recovery,
-#'  \emph{Environmental Science \& Technology}, 10, 3963-3971.
+#'  \emph{Environmental Science & Technology}, 10, 3963-3971.
 #' @keywords dataset
 NULL

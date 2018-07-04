@@ -1,6 +1,6 @@
 Package: gutsRstan
 Type: Package
-Title: Bayesian fitting of the General Unified Threshold model of Survival (GUTS) for data in ecotoxicology.
+Title: Bayesian fitting of the General Unified Threshold model of Survival (GUTS) for data in ecotoxicology
 Version: 0.1.0
 Date: 2017-09-15
 Author:
@@ -9,14 +9,17 @@ Author:
 Maintainer: Virgile Baudrot <virgile.baudrot@posteo.net>
 BugReports: https://github.com/virgile-baudrot/gutsRstan
 Description: Tools for ecotoxicologists and regulators dedicated to the
-    mathematical and statistical modelling of survival models from toxicity test data.
+    statistical fitting of survival models from toxicity test data, GUTS,
+    with Bayesian inference.
 License:GPL (>=2)
-Depends: R (>= 3.0.2), Rcpp (>= 0.12.12), methods
+Depends: R (>= 3.0.2), Rcpp (>= 0.12.12)
 Imports: 
   dplyr(>= 0.7.4),
   rstan (>= 2.16.2),
   rstantools (>= 1.3.0),
   ggplot2,
+  methods,
+  morse,
   zoo
 LinkingTo: StanHeaders (>= 2.16.0.1), rstan (>= 2.16.2), BH (>= 1.65.0.1), Rcpp (>= 0.12.12), RcppEigen (>= 0.3.3.3.0)
 RoxygenNote: 6.0.1

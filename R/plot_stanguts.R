@@ -8,7 +8,7 @@
 #' of time for each profile of concentration.
 #' The black dots depict the \strong{observed survival
 #' rate} at each time point.
-#' The function plots both 95\% binomial credible intervals for the estimated survival
+#' The function plots thz 95\% credible intervals for the estimated survival
 #' rate (by default the grey area around the fitted curve).
 #' 
 #' @param stanguts An object of class \code{stanguts}
@@ -34,7 +34,7 @@ plot_stanguts <- function(stanguts, ...){
 #' data("data_Diazinon")
 #'
 #' \dontrun{
-#' # (2) Run the stan_guts function with TK-TD model 'SD', 'IT', or 'PROPER' (and distribution) 
+#' # (2) Run the stan_guts function 
 #' fit_SD_diaz <- stan_guts(data_Diazinon, model_type = "SD")
 #'
 #' # (3) Plot the fitted curve
